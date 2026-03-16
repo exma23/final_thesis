@@ -5,132 +5,97 @@ import torch
 import yaml
 from torch.optim import Adam
 from torch.optim.lr_scheduler import StepLR
-from environments.single.single_env import BMEPEnvironment
 from environments.batch.batch_env import BatchedBMEPEnvironment
-from environments.bmep.bmep_utils import sa_feat_norm, dataset_partition, zero_bspr_len
-
+from utils._compute import sa_feat_norm, zero_bspr_len
 from agents.agent import SPRPolicy
 from networks.attention_net import AttentionNet
 from networks.ff_net import FFNet
+import sys
+from collections import defaultdict
+from utils._dataset import dataset_partition
+from pg_trainer import PGTrainer
 
-from trainers.pg_trainer import PGTrainer
-import argparse
+# random starttree - reinforce - rf distance
 
-parser = argparse.ArgumentParser()
+if __name__ == "main":
+    cfg = defaultdict(list)
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-parser.add_argument('--seed', type=int, default=0)
-parser.add_argument('--config', type=str, default='default_config.yml')
+    cfg['env_cfg'] = {
+      'tree_init_method': 'random',
+      'normalize_reward': True,
+      'normalize_feats': True,
+      'feat_transform': None,
+      'fixed_start': False,
+      'rew_norm_scale': 10
+    }
 
-args = parser.parse_args()
-cfg = yaml.load(open(args.config, 'r'), Loader=yaml.FullLoader)
+    cfg['network_cfg'] = {
+       'network_cls': 'FFNet',
+       'network_args': {
+          'in_features': 20,
+          'out_features': 1,
+          'layers': [128,128,128,128]
+       }
+    }
 
-log = cfg['log']
+    cfg['train_cfg'] = {
+        'dataset_folders': [
+          ''
+        ],
+        'n_steps': 30,
+        'n_epochs': 200,
+        'problem_batch_size': 100,
+        'training_batch_size': 512,
+        'eps_in_memory': 2, # buffer size
+        'train_epochs': 10,
+        'gamma': 0.9,
+    }
 
-if log:
-    logger = neptune.init_run(
-        project="federicocamerota/phyloRL",
-        api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiJkNDM4YTIyMS0zM2M0LTQ5YjItYjBhZi00NDNhZmFjYWZmYTMifQ==",
-        mode=cfg['log_mode'],
-        flush_period=10
-    )
-else:
+    cfg['policy_cfg'] = {
+      'train_selection_method': 'combined-sample',
+      'test_selection_method': 'sample',
+      'alpha': 1.0,
+      'alpha_decay': 0.9,
+      'temp': 0.00001
+    }
+
+    cfg['optimizer_cfg'] = {
+      'optimizer_cls': 'Adam',
+      'optimizer_args': {
+        'lr': 1e-3,
+        'weight_decay': 1e-4
+      },
+      'lr_scheduler': 'StepLR',
+      'lr_scheduler_args': {
+        'step_size': 50,
+        'gamma': 0.32
+      }
+    }
+
+    cfg['trainer_cfg'] = {
+       'resample_freq': 5,
+       'train_freq': 1
+    }
+
+    policy_cfg = cfg['policy_cfg']
+    network_cfg = cfg['network_cfg']
+    train_cfg = cfg['train_cfg']
+    optimizer_cfg = cfg['optimizer_cfg']
+
+    trainer_cfg = cfg['trainer_cfg']
+    trainer_cfg['device'] = device
+    trainer_cfg['train_cfg'] = train_cfg
+    trainer_cfg['optimizer_cfg'] = optimizer_cfg
+
+    bmep = BatchedBMEPEnvironment(**cfg['env_cfg'])
+    agent = SPRPolicy(policy_cfg, network_cfg)
+
+    datas = []
+    for file in trainer_cfg['dataset_folders']:
+      datas.append(bmep.read_dataset(file))
+    train_data, test_data, train_idxs = dataset_partition(datas, train_cfg['dataset_partition_prop'])
+
     logger = None
-
-
-seed = cfg['random_seed'] = args.seed
-random.seed(seed)
-
-cfg['run_id'] = str(uuid.uuid4())
-
-
-## Set device
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-cfg['device'] = device
-device = torch.device(device)
-
-env_cfg = cfg['env_cfg']
-
-#### Feature transformation
-if env_cfg['feat_transform'] is not None:
-    if env_cfg['feat_transform'] == 'sa_normalization':
-        env_cfg['feat_transform'] = sa_feat_norm
-    if env_cfg['feat_transform'] == 'zero_bspr_len':
-        env_cfg['feat_transform'] = zero_bspr_len
-    else:
-        raise NotImplementedError()
-
-## Environment
-if cfg['batched']:
-    bmep = BatchedBMEPEnvironment(**env_cfg)
-else:
-    bmep = BMEPEnvironment(**env_cfg)
-
-# Network configs
-network_cfg = cfg['network_cfg']
-network_cfg['network_args']['device'] = device
-
-if network_cfg['network_cls'] == 'AttentionNet':
-    network_cfg['network_cls'] = AttentionNet
-elif network_cfg['network_cls'] == 'FFNet':
-    network_cfg['network_cls'] = FFNet
-else:
-    raise NotImplementedError()
-
-# Training configs
-train_cfg = cfg['train_cfg']
-
-## Policy configs
-policy_cfg = cfg['policy_cfg']
-policy_cfg['device'] = device
-
-## Optimizer configs
-optimizer_cfg = cfg['optimizer_cfg']
-if optimizer_cfg['optimizer_cls'] == 'Adam':
-    optimizer_cfg['optimizer_cls'] = Adam
-else:
-    raise NotImplementedError()
-
-if optimizer_cfg['lr_scheduler'] is not None:
-    if optimizer_cfg['lr_scheduler'] == 'StepLR':
-        optimizer_cfg['lr_scheduler'] = StepLR
-    else:
-        raise NotImplementedError()
-
-## Trainer configs
-trainer_cfg = cfg['trainer_cfg']
-trainer_cfg['device'] = device
-trainer_cfg['train_cfg'] = train_cfg
-trainer_cfg['optimizer_cfg'] = optimizer_cfg
-
-## CONFIG LOGGING
-def repr_dict(d):
-    return {k: repr_dict(v) if isinstance(v, dict) else repr(v) for k, v in d.items()}
-## Log configs
-if logger is not None:
-    logger['cfg'] = repr_dict(cfg)
-## TAGS
-    tags = cfg['tags']
-    logger['sys/tags'].add(tags)
-
-## Data
-data = bmep.read_dataset(train_cfg["dataset_filename"])
-train_data, test_data, train_idxs = dataset_partition(data, train_cfg['dataset_partition_prop'])
-
-
-## Agent
-agent = SPRPolicy(policy_cfg, network_cfg)
-if 'checkpoint' in train_cfg and train_cfg['checkpoint'] is not None:
-    agent.load_checkpoint(train_cfg['checkpoint'])
-#agent.load_checkpoint('experiments/checkpoints/checkpoints_dqn_trainer_db44ed78-6908-4561-8457-8ecc03406404/agent_epoch980_perf0.28935208905442233')
-#agent.load_checkpoint('experiments/checkpoints/checkpoints_dqn_trainer_cbf8056f-78b9-47d3-a3ed-4f9502f5eba3/best_agent_epoch256gap-0.07811148909526727')
-
-## Trainer
-trainer = PGTrainer(trainer_cfg, agent, bmep)
-
-## Training
-trainer.train(train_data, test_data, logger, checkpoint_frequency=100, save_best=True, save_dir='experiments/checkpoints', run_id=cfg['run_id'])
-
-if cfg['save_split']:
-    torch.save(torch.tensor(train_idxs), os.path.join(trainer.save_path(), 'train_data_split.pt'))
-
-
+    trainer = PGTrainer(trainer_cfg, agent, bmep)
+    trainer.train(train_data, test_data, logger, checkpoint_frequency=100, save_best=True, save_dir='experiments/checkpoints')

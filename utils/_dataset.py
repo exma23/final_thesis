@@ -34,3 +34,23 @@ class LLDataSet:
 
 class RFDataSet:
     pass
+
+def dataset_partition(bmep_dataset, prop):
+    n1 = int(bmep_dataset.n_taxa() * prop)
+    n1_samples = random.sample(range(bmep_dataset.n_taxa()), n1)
+
+    dset1, dset2 = split_dataset(bmep_dataset, n1_samples)
+
+    return dset1, dset2, n1_samples
+
+def split_dataset(bmep_dataset, split_set):
+    n1_samples = split_set
+    n2_samples = [i_i for i_i in range(bmep_dataset.n_taxa()) if i_i not in n1_samples]
+
+    d1 = bmep_dataset._d[n1_samples, :][:, n1_samples]
+    d2 = bmep_dataset._d[n2_samples, :][:, n2_samples]
+
+    dset1 = BMEPDataSet(d1)
+    dset2 = BMEPDataSet(d2)
+
+    return dset1, dset2

@@ -13,6 +13,14 @@ def feat_normalization_fn(x, n_taxa):
 
     return x
 
+def sa_feat_norm(x):
+    x[:, 1:] = (x[:, 1:] - torch.mean(x[:, 1:], dim=0, keepdim=True)) / torch.mean(x[:, 1:], dim=0, keepdim=True)
+    return x
+
+def zero_bspr_len(x):
+    x[..., 7] = 0
+    return x
+
 #-------------------------------------
 def get_splits(adj, n_taxa, root=None):
     if root is None:

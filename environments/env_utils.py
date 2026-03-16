@@ -1,12 +1,7 @@
 from dataclasses import dataclass
 import torch
-import subprocess
-import tempfile
-import os
 from concurrent.futures import ProcessPoolExecutor
-from environments.single.single_tree import TrainingTree
-from environments.single.single_env import BMEPEnvironment
-import environments.batch.batch_tree as batch_env
+from environments.batch.batch_tree import TrainingTree
 from agents.agent import SPRPolicy
 from utils._lib_call import call_raxml
 
@@ -76,7 +71,7 @@ def raxml_tree_init(problem_data):
 def bmep_tree_l(problem_data: BMEPData, tree: TrainingTree):
     return tree.get_length()
 
-def ll_tree(problem_data: LLData, tree: batch_env.TrainingTree):
+def ll_tree(problem_data: LLData, tree: TrainingTree):
     args = []
     for i, t_i in enumerate(tree._trees):
         labels_i = problem_data.labels[i]

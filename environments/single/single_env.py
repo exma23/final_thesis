@@ -127,13 +127,12 @@ class BMEPEnvironment:
 
         return new_state, reward
 
-    @staticmethod
     def read_dataset(self, dataset_file, data_dir='data/bmep'):
-        if self._obj_type == 'bmep-l':
+        if self._obj_fn == bmep_tree_l:
             return read_bmep_dataset(data_dir, dataset_file)
-        elif self._obj_type == 'll':
+        elif self._obj_fn == ll_tree:
             return read_ll_dataset(data_dir, dataset_file)
-        elif self._obj_fn == 'rf':
+        elif self._obj_fn == rf_tree:
             return read_rf_dataset(data_dir, dataset_file)
 
     def n_features(self):

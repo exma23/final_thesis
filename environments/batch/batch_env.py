@@ -8,6 +8,10 @@ from environments.env_utils import spr_neighbor_features, spr_action, \
     BMEPState, BMEPData, LLState, LLData, RFState, RFData
 from utils._validate import batched_validation
 import torch
+from Solvers.BNNI_BSPR.fast_cpp import FastCpp
+import numpy as np
+
+fast_obj = FastCpp()
 
 class BatchedBMEPEnvironment(BMEPEnvironment):
 
@@ -116,3 +120,7 @@ class BatchedBMEPEnvironment(BMEPEnvironment):
         if self._maximize_obj:
             state.best_ll = self._obj_fn(problem_data, state.best_tree)
         return state
+    
+    def set_trees(self, new_trees):
+        self._trees = new_trees
+        self.n_moves, self._moves, self._features_tensor, self._tree_lens = fast_obj.get_features_batch_cpp(self._trees)

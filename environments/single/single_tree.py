@@ -101,6 +101,14 @@ class Tree:
 
     def compute_features_cpp(self) -> Tuple[torch.Tensor, torch.Tensor]:
         return fast_obj.get_features_cpp(self.d, self.edges, self.n_taxa, self.m)
+    def run_bspr(self, max_steps=10**6):
+        #t = training_Tree._tree
+        adjs, objs, spr_counts = fast_obj.run_BSPR(self.d.astype(np.double), self.adj.astype(dtype=np.int32),
+                                                   self.n_taxa, self.m, max_steps)
+
+        fast_obj.free_result_memory()
+        return objs, spr_counts
+
 
 class TrainingTree:
     def __init__(self, d, device=torch.device('cuda:0' if torch.cuda.is_available() else 'cpu'), init_method='random'):
