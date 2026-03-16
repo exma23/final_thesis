@@ -48,3 +48,18 @@ class TrainingTree:
     def set_trees(self, new_trees):
         self._trees = new_trees
         self.n_moves, self._moves, self._features_tensor, self._tree_lens = fast_obj.get_features_batch_cpp(self._trees)
+
+    def BSPR(self, max_steps=10 ** 6, ret_steps=False, ret_traj=False):
+        bspr_lens, bspr_trajs, bspr_steps = fast_obj.run_BSPR_batch(self._trees, max_steps)
+        if max_steps < 10 ** 6:
+            full_traj = np.ones((len(self._trees), max_steps + 1)) * bspr_lens.reshape((-1, 1))
+            for i_i, (t_i, s_i) in enumerate(zip(bspr_trajs, bspr_steps)):
+                full_traj[i_i, :s_i] = t_i
+
+        out = []
+        out += [bspr_steps] if ret_steps else []
+        out += [full_traj] if ret_traj else []
+        if len(out) > 0:
+            return bspr_lens, *out
+
+        return bspr_lens

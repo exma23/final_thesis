@@ -87,14 +87,6 @@ class BatchedBMEPEnvironment(BMEPEnvironment):
         self._rew_norm_scale = rew_norm_scale
 
         self._normalize_feats = normalize_feats
-        
-    def make_batch_data(self, dist_tensor, orig_idxs_list):
-        if self._obj_type == 'raxml-ll':
-            per_instance_labels = [[self._fasta_labels[j] for j in idxs] for idxs in orig_idxs_list]
-            return MLData(dist=dist_tensor, alignment_file=self._alignment_file,
-                        model=self._model, labels=per_instance_labels)
-        from environments.batched_bmep.batched_bmep_utils import BMEPData
-        return BMEPData(dist=dist_tensor)
 
     def _update_state(self, problem_data, current_state, new_tree):
         new_obj_vals = self._obj_fn(problem_data, new_tree)

@@ -57,10 +57,8 @@ class Tree:
         self.adj = np.zeros((2 * self.n_taxa - 2, 2 * self.n_taxa - 2), dtype=int)
         for idx in edges:
             self.adj[idx[0], idx[1]] = self.adj[idx[1], idx[0]] = 1
-        # self.edges = np.transpose(np.nonzero(self.adj))
         self.edges = edges
         self.subtrees = self.edges + [(e[1], e[0]) for e in self.edges]
-        # self.T = self.get_full_tau(self.adj)
         self.T = np.zeros((self.m, self.m), dtype=int)
     
     def set_raxml_tree(self, newick_str: str):
@@ -125,7 +123,6 @@ class TrainingTree:
         self._actions, self._features_tensor = self._tree.compute_features_cpp()
         self._tree_len = self._features_tensor[0][0].item()
 
-    #qui si puo' poi lavorare per generalizare ed avere features diverse
     def get_features(self, normalize=False):
         return feat_normalization_fn(self._features_tensor, self._n_taxa) if normalize else self._features_tensor
     def get_length(self):
@@ -134,7 +131,7 @@ class TrainingTree:
         return None
     def get_rf(self, true_tree: 'TrainingTree'):
         return normalized_rf_distance(self._tree.adj, true_tree._tree.adj, self._tree.n_taxa)
-
+    
     def action(self, action_idx: int):
         pruned, regrafted = self._actions[action_idx][:2], self._actions[action_idx][2:]
         tree = self._tree.copy()

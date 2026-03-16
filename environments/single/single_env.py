@@ -96,7 +96,9 @@ class BMEPEnvironment:
     def _update_state(
         self, 
         problem_data, 
-        current_state, new_tree):
+        current_state, 
+        new_tree
+    ):
         new_obj_vals = self._obj_fn(new_tree)
         best_obj_vals = self._obj_fn(current_state.best_tree)
 
@@ -106,14 +108,13 @@ class BMEPEnvironment:
 
         return self._state_cls(init_tree=current_state.init_tree, best_tree=best_tree, current_tree=new_tree)
 
-    def step(
-        self, 
-        problem_data, 
-        current_state, 
-        action, bspr_baseline_steps=0):
+    def step(self, problem_data, current_state, action, bspr_baseline_steps=0):
+
         new_tree = self._action_fn(problem_data, current_state, action)
         rew_norm_factor = current_state.init_tree.get_length() if self._normalize_reward else 1
+
         reward = self._reward_fn(problem_data, current_state, new_tree, norm_factor=rew_norm_factor, norm_scale=self._rew_norm_scale)
+
         new_state = self._update_state(problem_data, current_state, new_tree)
 
         if bspr_baseline_steps > 0:
@@ -123,6 +124,7 @@ class BMEPEnvironment:
             bspr_value += reward
 
             return new_state, reward, [bspr_len, bspr_improvement, bspr_value]
+
         return new_state, reward
 
     @staticmethod

@@ -15,6 +15,7 @@ class BMEPState:
     init_tree: TrainingTree
     best_tree: TrainingTree  # BMEPTree
     current_tree: TrainingTree
+
 @dataclass
 class LLState:
     init_tree: TrainingTree
@@ -26,6 +27,7 @@ class LLState:
     alignment_file: str
     model: str
     labels: list
+    
 @dataclass
 class RFState:
     pass
