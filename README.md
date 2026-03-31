@@ -1,6 +1,27 @@
 RL framework's possible options:
 - Loss: Q learning, REINFORCE
 - Objective functions/rewards: RF distance, BMEPRL, Likelihood
+- Train and inference strategies: greedy, epsilon-greedy, softmax
+- Train and inference parameters:
+
+Vong lap training:
+- Moi epoch chon 1 cay
+- Thuc hien mot chuoi cac buoc SPR tren cay do
+- Luu lai: state, action, reward, .... vao buffer[tree][epoch]
+- Train: mang no ron network
+    + Mang REINFORCE
+    => Input: state + action
+    => Output: reward
+    => Loss: REINFORCE
+    + Mang deep Q-learning
+    => Input: state_1 + action_1 vao mang 1; state_2 + action_2 vao mang 2
+    => Output: reward theo bieu thuc Bellman equation
+    => Loss: MSE
+- Test: 
+    + Tu 1 state, xet toan bo SPR move
+    + Encode state + action => cho qua mang no ron
+    + Tinh diem va greedy'
+    
 
 A network
 
@@ -9,31 +30,62 @@ A tree:
     + adjacent matrix/distance matrix
 - Methods: 
     + apply_SPR move
+    => Input: pruned + regraft
+    => Output: None (modify the adjacent matrix)
+
     + calculate the action (to feed the network)
+    => Input: None
+    => Output: all possible SPR move + after state from the current tree
+    (convert the adjacent matrix from tree --> C++. Xet toan bo move co the --> convert roi ve python)
 
 A agent: 
 - Attributes:
     + network
     + rule (policy - a str)
-- Methods: 
-    + choose actions: input - output
+- Methods: forward
+    => Input: all possible state-action features
+    => Output: action idx
 
-A environment:
+A environment: only consider one tree at a time.
 - Attributes:
     + obj_type -> obj_fn -> reward_fn
     + Tree: the current tree
     + The current metric being tracked/optimized
     + Remaining steps in current episode
 - Methods:
-    + reset: choose a new tree
-    + step: applying -> return new_state, reward
-    + compute: a treelikelihood
+    + reset: 
+        => Input: tree from newick file -> convert to a tree
+        => Output: state of that tree
+    + step: 
+        => Input: current_state, action
+        => Output: new_state, reward
+    + compute: 
+        => Input: state of a tree
+        => Output: likelihood/length of current tree
 
 Replaybuffer: 
 - attributes:
-    + memory: 
+    + memory[tree][epoch]
 - methods: 
     + add_memory
+
+
+
+Ba biến này là cấu hình để tạo các bài toán phylogenetic cho quá trình huấn luyện agent:
+
+'instance_size': 20 — Kích thước của mỗi bài toán (số taxa/loài)
+
+Mỗi "instance" là một ma trận khoảng cách (distance matrix) có kích thước 20×20
+Đây là chiều dành của vấn đề cần giải quyết
+'n_train_instances': 200 — Số lượng bài toán khác nhau để huấn luyện
+
+Agent sẽ được huấn luyện trên 200 bài toán độc lập
+Mỗi bài toán được tạo bằng cách lấy ngẫu nhiên 20 taxa từ dataset gốc
+'n_test_instances': 50 — Số lượng bài toán khác nhau để kiểm tra
+
+Agent được đánh giá trên 50 bài toán độc lập (khác với training set)
+Dùng để đo hiệu suất và tránh overfitting
+Như vậy: Agent sẽ được huấn luyện trên 200 bài toán (mỗi bài có 20 loài), rồi được kiểm tra trên 50 bài toán khác nhạc để đánh giá khả năng tổng quát hóa.
 
 
 

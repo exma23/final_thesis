@@ -1,101 +1,60 @@
 import os
-import random
-import uuid
+import glob
 import torch
-import yaml
-from torch.optim import Adam
-from torch.optim.lr_scheduler import StepLR
-from environments.batch.batch_env import BatchedBMEPEnvironment
-from utils._compute import sa_feat_norm, zero_bspr_len
-from agents.agent import SPRPolicy
-from networks.attention_net import AttentionNet
-from networks.ff_net import FFNet
-import sys
-from collections import defaultdict
-from utils._dataset import dataset_partition
-from pg_trainer import PGTrainer
+import common
+from common import Strategy
+from agents.agent import Agent
+from trainer.trainer import Trainer
+from trainer.config import Config, TrainConfig
 
-# random starttree - reinforce - rf distance
 
-if __name__ == "main":
-    cfg = defaultdict(list)
+def load_tree_data(data_dir: str):
+    """
+    Scans data_dir for files matching {id}_starting.tre / {id}_ground_truth.tre.
+    Returns two dicts: {tree_id -> starting_newick} and {tree_id -> gt_newick}.
+    """
+    dict_tree_newick = {}
+    dict_tree_gt_newick = {}
+
+    for path in sorted(glob.glob(os.path.join(data_dir, '*_starting.tre'))):
+        tree_id = os.path.basename(path).replace('_starting.tre', '')
+        gt_path = os.path.join(data_dir, f'{tree_id}_ground_truth.tre')
+        if not os.path.exists(gt_path):
+            print(f'[warn] no ground truth for tree {tree_id}, skipping')
+            continue
+        with open(path) as f:
+            dict_tree_newick[tree_id] = f.read().strip()
+        with open(gt_path) as f:
+            dict_tree_gt_newick[tree_id] = f.read().strip()
+
+    return dict_tree_newick, dict_tree_gt_newick
+
+
+if __name__ == '__main__':
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-    cfg['env_cfg'] = {
-      'tree_init_method': 'random',
-      'normalize_reward': True,
-      'normalize_feats': True,
-      'feat_transform': None,
-      'fixed_start': False,
-      'rew_norm_scale': 10
-    }
+    dict_tree_newick, dict_tree_gt_newick = load_tree_data(common.DATA_PATH)
+    print(f'Loaded {len(dict_tree_newick)} trees: {list(dict_tree_newick.keys())}')
 
-    cfg['network_cfg'] = {
-       'network_cls': 'FFNet',
-       'network_args': {
-          'in_features': 20,
-          'out_features': 1,
-          'layers': [128,128,128,128]
-       }
-    }
+    train_cfg = TrainConfig(
+        num_epoch=200,
+        n_steps=30,
+        learning_rate=1e-3,
+        in_features=20,
+        out_features=1,
+        device=device,
+        layers=[128, 128, 128, 128],
+        weight_decay=1e-4,
+    )
+    config = Config(train_cfg=train_cfg)
 
-    cfg['train_cfg'] = {
-        'dataset_folders': [
-          ''
-        ],
-        'n_steps': 30,
-        'n_epochs': 200,
-        'problem_batch_size': 100,
-        'training_batch_size': 512,
-        'eps_in_memory': 2, # buffer size
-        'train_epochs': 10,
-        'gamma': 0.9,
-    }
+    agent = Agent(strategy=Strategy.GREEDY.value)
 
-    cfg['policy_cfg'] = {
-      'train_selection_method': 'combined-sample',
-      'test_selection_method': 'sample',
-      'alpha': 1.0,
-      'alpha_decay': 0.9,
-      'temp': 0.00001
-    }
+    trainer = Trainer(
+        config=config,
+        dict_tree_newick=dict_tree_newick,
+        dict_tree_gt_newick=dict_tree_gt_newick,
+        agent=agent,
+    )
 
-    cfg['optimizer_cfg'] = {
-      'optimizer_cls': 'Adam',
-      'optimizer_args': {
-        'lr': 1e-3,
-        'weight_decay': 1e-4
-      },
-      'lr_scheduler': 'StepLR',
-      'lr_scheduler_args': {
-        'step_size': 50,
-        'gamma': 0.32
-      }
-    }
-
-    cfg['trainer_cfg'] = {
-       'resample_freq': 5,
-       'train_freq': 1
-    }
-
-    policy_cfg = cfg['policy_cfg']
-    network_cfg = cfg['network_cfg']
-    train_cfg = cfg['train_cfg']
-    optimizer_cfg = cfg['optimizer_cfg']
-
-    trainer_cfg = cfg['trainer_cfg']
-    trainer_cfg['device'] = device
-    trainer_cfg['train_cfg'] = train_cfg
-    trainer_cfg['optimizer_cfg'] = optimizer_cfg
-
-    bmep = BatchedBMEPEnvironment(**cfg['env_cfg'])
-    agent = SPRPolicy(policy_cfg, network_cfg)
-
-    datas = []
-    for file in trainer_cfg['dataset_folders']:
-      datas.append(bmep.read_dataset(file))
-    train_data, test_data, train_idxs = dataset_partition(datas, train_cfg['dataset_partition_prop'])
-
-    logger = None
-    trainer = PGTrainer(trainer_cfg, agent, bmep)
-    trainer.train(train_data, test_data, logger, checkpoint_frequency=100, save_best=True, save_dir='experiments/checkpoints')
+    trainer.train()

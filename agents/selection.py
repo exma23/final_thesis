@@ -1,7 +1,6 @@
 import abc
 import torch
 
-
 class SelectionMethod:
     @abc.abstractmethod
     def __call__(self, *args, **kwargs):
