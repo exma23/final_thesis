@@ -1,13 +1,9 @@
-#include "phylotree.h"
+#include "features.h"
 #include <vector>
 #include <algorithm>
 #include <queue>
 #include <cmath>
-#include <array>
 
-struct FeatureVector {
-    std::array<double, 20> features;
-};
 
 static int count_leaves(Node* node) {
     if (!node->left && !node->right) return 1;

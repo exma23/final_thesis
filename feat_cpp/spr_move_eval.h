@@ -1,6 +1,6 @@
 #pragma once
 #include "phylotree.h"
-#include "features.cc"
+#include "features.h"
 #include <vector>
 #include <array>
 

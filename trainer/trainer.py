@@ -55,13 +55,12 @@ class Trainer:
                 action_chosen = self.agent.choose(actions_current, y_pred_current)
                 newick_old = newick_current
 
+            print(f"Epoch {epoch}/{self.train_cfg.num_epoch} done")
+
     def update_grad(self, X_feat: torch.Tensor, y: torch.Tensor):
-        logits = self.FFNet(X_feat)
-        probs = torch.softmax(logits, dim=-1)
-
-        loss = -(probs * y)
-        loss = loss.mean()
-
+        logits = self.FFNet(X_feat).squeeze(-1)  # (n,)
+        probs = torch.softmax(logits, dim=0)      # softmax across moves, not features
+        loss = -(probs * y).sum()
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()

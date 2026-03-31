@@ -58,3 +58,5 @@ if __name__ == '__main__':
     )
 
     trainer.train()
+    torch.save(trainer.FFNet.state_dict(), 'model.pt')
+    print('Model saved to model.pt')
