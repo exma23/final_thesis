@@ -10,8 +10,6 @@ class FFNet(nn.Module):
 
         self.emb_layer = nn.Linear(self.in_features, layers[0])
         self.out_layer = nn.Linear(layers[-1], self.out_features)
-        if layers is None:
-            layers = []
         self.layers = nn.ModuleList()
         for l_in, l_out in zip(layers[:-1], layers[1:]):
             self.layers.append(nn.Linear(l_in, l_out))

@@ -15,4 +15,6 @@ class Strategy(Enum):
     GREEDY = "greedy"
     SOFTMAX = "softmax"
 
-INITIAL_ACTION = ((-1, -1), (-1, -1))
+INITIAL_ACTION = (-1, -1)
+
+FEAT_DIM = 19

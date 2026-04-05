@@ -40,7 +40,7 @@ if __name__ == '__main__':
         num_epoch=200,
         n_steps=30,
         learning_rate=1e-3,
-        in_features=20,
+        in_features=common.FEAT_DIM,
         out_features=1,
         device=device,
         layers=[128, 128, 128, 128],

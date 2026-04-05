@@ -26,4 +26,4 @@ class Agent:
             raise ValueError(f"Unknown strategy: {self.strategy}")
 
         row = actions_current[idx]
-        return ((int(row[0]), int(row[1])), (int(row[2]), int(row[3])))
+        return (int(row[0]), int(row[1]))
