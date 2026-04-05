@@ -107,3 +107,26 @@ int pllHashAdd  (pllHashTable * hTable, unsigned int hash, const char * s, void 
 
   return (PLL_TRUE);
 }
+
+void pllHashDestroy (pllHashTable ** hTable, void (*cbDealloc)(void *))
+{
+  unsigned int i;
+  pllHashItem * hItem;
+  pllHashItem * tmp;
+
+  for (i = 0; i < (*hTable)->size; ++ i)
+  {
+    hItem = (*hTable)->Items[i];
+    while (hItem)
+     {
+       tmp   = hItem;
+       hItem = hItem->next;
+       if (tmp->str)  rax_free (tmp->str);
+       if (cbDealloc) cbDealloc (tmp->data);
+       rax_free (tmp);
+     }
+  }
+  rax_free ((*hTable)->Items);
+  rax_free (*hTable);
+  *hTable = NULL;
+}
