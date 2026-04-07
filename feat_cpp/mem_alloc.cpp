@@ -1,97 +1,20 @@
-#define MEM_ALLOC_NO_GUARDS 1
-
 #include "mem_alloc.hpp"
 
-#include <stdio.h>
+#include <malloc.h>
 #include <stdlib.h>
-#ifndef __APPLE__
-#include <malloc.h>             // this is probably not necessary
-#endif
 
-#ifdef RAXML_USE_LLALLOC
+void *rax_memalign(size_t align, size_t size) { return memalign(align, size); }
 
-// the llalloc library implementation in lockless_alloc/ll_alloc.c exports the alloction functions prefixed
-// with 'llalloc'. The following are the forward declarations of the llalloc* functions
+void *rax_malloc(size_t size) { return malloc(size); }
 
-#define PREFIX(X)   llalloc##X
+void *rax_realloc(void *p, size_t size) { return realloc(p, size); }
 
-void *PREFIX(memalign)(size_t align, size_t size);
-void *PREFIX(malloc)(size_t size);
-void *PREFIX(realloc)(void *p, size_t size);
-int PREFIX(posix_memalign)(void **p, size_t align, size_t size);
-void *PREFIX(calloc)(size_t n, size_t size);
-void PREFIX(free)(void *p);
+void *rax_calloc(size_t n, size_t size) { return calloc(n, size); }
 
-
-// wrappers that forward the rax_* functions to the corresponding llalloc* functions
-
-
-void *rax_memalign(size_t align, size_t size) {
-  return PREFIX(memalign)(align, size);
-}
-
-void *rax_malloc( size_t size ) {
-  return PREFIX(malloc)(size);
-}
-void *rax_realloc( void *p, size_t size ) {
-  return PREFIX(realloc)(p, size);
-}
-
-
-void rax_free(void *p) {
-  PREFIX(free)(p);
-}
-
-int rax_posix_memalign(void **p, size_t align, size_t size) {
-  return PREFIX(posix_memalign)(p, align, size);
-}
-void *rax_calloc(size_t n, size_t size) {
-  return PREFIX(calloc)(n,size);
-}
-
-void *rax_malloc_aligned(size_t size)
-{
-  return rax_memalign(32, size);
-}
-
-#else // RAXML_USE_LLALLOC
-// if llalloc should not be used, forward the rax_* functions to the corresponding standard function
-
-void *rax_memalign(size_t align, size_t size) {
-#if defined (__APPLE__)
-    void * mem;
-    if (posix_memalign (&mem, align, size))
-      return (NULL);
-    else
-      return (mem);
-#else
-    return memalign(align, size);
-#endif
-
-}
-
-void *rax_malloc( size_t size ) {
-  return malloc(size);
-}
-void *rax_realloc( void *p, size_t size ) {
-  return realloc(p, size);
-}
-
-
-void rax_free(void *p) {
-  free(p);
-}
+void rax_free(void *p) { free(p); }
 
 int rax_posix_memalign(void **p, size_t align, size_t size) {
   return posix_memalign(p, align, size);
 }
-void *rax_calloc(size_t n, size_t size) {
-  return calloc(n,size);
-}
 
-void *rax_malloc_aligned(size_t size)
-{
-  return rax_memalign(32, size);
-}
-
-#endif
+void *rax_malloc_aligned(size_t size) { return rax_memalign(32, size); }
