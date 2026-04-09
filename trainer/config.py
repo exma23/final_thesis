@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List
+import common
 
 
 @dataclass
@@ -27,7 +28,7 @@ class RLConfig:
     buffer_size: int = 10000
     batch_size: int = 32
     target_update_freq: int = 100
-    tau: float = 0.005             
+    tau: float = 0.005
     epsilon_start: float = 1.0
     epsilon_end: float = 0.05
     epsilon_decay_steps: int = 5000
@@ -37,6 +38,7 @@ class RLConfig:
 class PhyloConfig:
     move_type: str
     obj_func: str
+    spr_radius: int = common.DEFAULT_SPR_RADIUS
 
 
 class Config:

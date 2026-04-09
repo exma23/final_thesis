@@ -37,6 +37,7 @@ if __name__ == '__main__':
     phylo_cfg = PhyloConfig(
         move_type=common.MoveType.SPR.value,
         obj_func=common.ObjFunc.RF.value,
+        spr_radius=7,
     )
 
     config = Config(train_cfg=train_cfg, rl_cfg=rl_cfg, phylo_cfg=phylo_cfg)

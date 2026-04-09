@@ -12,6 +12,7 @@ class Trainer:
     def __init__(self, config: Config, env: Environment, agent: Agent):
         self.rl_cfg = config.rl_cfg
         self.train_cfg = config.train_cfg
+        self.phylo_cfg = config.phylo_cfg
         self.env = env
         self.agent = agent
 
@@ -43,6 +44,7 @@ class Trainer:
     def _train_reinforce(self):
         for epoch in range(self.train_cfg.num_epoch):
             tree_cur = np.random.choice(self.env.tree_indices)
+            self.env.tree_state[tree_cur] = self.env.tree_start[tree_cur]  # ← RESET
             transitions = self._rollout(tree_cur)
             rewards = [t['reward'] for t in transitions]
             returns = self._compute_returns(rewards, self.rl_cfg.gamma)
@@ -59,13 +61,27 @@ class Trainer:
         transitions = []
 
         for step in range(self.rl_cfg.n_steps):
-            if step % 10 == 0:
-                print(f'at step {step}')
+            # if step % 10 == 0:
+            #     print(f'at step {step}')
             new_newick, actions, feats, rewards = \
-                self.env.cpp.get_state_action(cur_newick, action_idx, gt_newick)
+                self.env.cpp.get_state_action(
+                    cur_newick, action_idx, gt_newick,
+                    spr_radius=self.phylo_cfg.spr_radius)
 
             X = torch.tensor(feats, dtype=torch.float32,
                              device=self.train_cfg.device)
+            with torch.no_grad():
+                logits = self.agent.network(X).squeeze(-1)
+                probs = torch.softmax(logits, dim=0)
+
+            if step % 10 == 0:  # in ở step đầu mỗi epoch
+                with torch.no_grad():
+                    logits = self.agent.network(X).squeeze(-1)
+                    probs = torch.softmax(logits, dim=0)
+                top5 = sorted(range(len(rewards)), key=lambda i: rewards[i], reverse=True)[:5]
+                print(f"  Top-5 reward actions (step {step}):")
+                for rank, i in enumerate(top5):
+                    print(f"    #{rank+1} idx={i} r={rewards[i]:.2f} prob={probs[i]:.4f}")
             _, action_idx = self.agent.choose(actions, X)  # ← CHANGED: only need idx
 
             transitions.append({
@@ -88,11 +104,17 @@ class Trainer:
         return G
 
     def _update_reinforce(self, transitions, returns):
+        G = torch.tensor(returns, dtype=torch.float32, device=self.train_cfg.device)
+        G = (G - G.mean()) / (G.std() + 1e-8)
+
         loss = torch.tensor(0.0, device=self.train_cfg.device)
-        for t, G_t in zip(transitions, returns):
+        for t, G_t in zip(transitions, G):
             logits = self.agent.forward(t['features']).squeeze(-1)
             log_probs = torch.log_softmax(logits, dim=0)
             loss += -log_probs[t['action_idx']] * G_t
+            probs = torch.softmax(logits, dim=0)
+            entropy = -(probs * log_probs).sum()
+            loss += -0.01 * entropy
 
         loss = loss / len(transitions)
         self.optimizer.zero_grad()
