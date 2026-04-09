@@ -59,6 +59,8 @@ class Trainer:
         transitions = []
 
         for step in range(self.rl_cfg.n_steps):
+            if step % 10 == 0:
+                print(f'at step {step}')
             new_newick, actions, feats, rewards = \
                 self.env.cpp.get_state_action(cur_newick, action_idx, gt_newick)
 
@@ -115,6 +117,8 @@ class Trainer:
                     cur_newick, -1, gt_newick)            # ← CHANGED
 
             for step in range(self.rl_cfg.n_steps):
+                if step % 10 == 0:
+                    print(f'at epoch {epoch}, step {step}')
                 X = torch.tensor(cur_feats, dtype=torch.float32,
                                  device=self.train_cfg.device)
 
