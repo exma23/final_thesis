@@ -1,0 +1,84 @@
+IQ-TREE version 3.1.1 for Linux x86 64-bit built Apr  8 2026
+Developed by Bui Quang Minh, Thomas Wong, Nhan Ly-Trong, Huaiyan Ren
+Contributed by Lam-Tung Nguyen, Dominik Schrempf, Chris Bielow,
+Olga Chernomor, Michael Woodhams, Diep Thi Hoang, Heiko Schmidt
+
+Host:    ha-ThinkPad-E14-Gen-5 (AVX2, FMA3, 31 GB RAM)
+Command: /home/ha/miniconda3/envs/thesis/bin/iqtree3 -s data/10.phy -m GTR+I+G --prefix data/10_infer -fast --seed 10
+Seed:    10 (Using SPRNG - Scalable Parallel Random Number Generator)
+Time:    Thu Apr  9 22:03:49 2026
+Kernel:  AVX+FMA - 1 threads (16 CPU cores detected)
+
+HINT: Use -nt option to specify number of threads because your CPU has 16 cores!
+HINT: -nt AUTO will automatically determine the best number of threads to use.
+
+Reading alignment file data/10.phy ... Phylip format detected
+Alignment most likely contains DNA/RNA sequences
+Constructing alignment: done in 0.00043483 secs using 32.66% CPU
+Alignment has 30 sequences with 500 columns, 490 distinct patterns
+466 parsimony-informative, 22 singleton sites, 12 constant sites
+Analyzing sequences: done in 3.5091e-05 secs
+Checking for duplicate sequences: done in 7.5447e-05 secs
+
+Create initial parsimony tree by phylogenetic likelihood library (PLL)... 0.00 seconds
+
+NOTE: 1 MB RAM (0 GB) is required!
+Estimate model parameters (epsilon = 0.50)
+1. Initial log-likelihood: -14402.05
+2. Current log-likelihood: -14197.94
+3. Current log-likelihood: -14189.17
+Optimal log-likelihood: -14188.70
+Rate parameters:  A-C: 1.14336  A-G: 1.05877  A-T: 1.03504  C-G: 0.91473  C-T: 0.86709  G-T: 1.00000
+Base frequencies:  A: 0.264  C: 0.328  G: 0.248  T: 0.160
+Proportion of invariable sites: 0.009
+Gamma shape alpha: 1.020
+Parameters optimization took 3 rounds (0.083 sec)
+Wrote distance file to... 
+Computing ML distances based on estimated model parameters...
+Calculating distance matrix: done in 0.00303206 secs using 99.01% CPU
+Computing ML distances took 0.003118 sec (of wall-clock time) 0.003088 sec (of CPU time)
+WARNING: Some pairwise ML distances are too long (saturated)
+Setting up auxiliary I and S matrices: done in 5.0132e-05 secs
+Constructing RapidNJ tree: done in 0.000141372 secs
+Computing RapidNJ tree took 0.000239 sec (of wall-clock time) 0.000000 sec (of CPU time)
+Log-likelihood of RapidNJ tree: -14162.241
+--------------------------------------------------------------------
+|             INITIALIZING CANDIDATE TREE SET                      |
+--------------------------------------------------------------------
+
+Do NNI search on 2 best initial trees
+Estimate model parameters (epsilon = 0.500)
+BETTER TREE FOUND at iteration 1: -14161.865
+Finish initializing candidate tree set (4)
+Current best tree score: -14161.865 / CPU time: 0.088
+Number of iterations: 2
+TREE SEARCH COMPLETED AFTER 2 ITERATIONS / Time: 0h:0m:0s
+
+--------------------------------------------------------------------
+|                    FINALIZING TREE SEARCH                        |
+--------------------------------------------------------------------
+Performs final model parameters optimization
+Estimate model parameters (epsilon = 0.050)
+1. Initial log-likelihood: -14161.865
+Optimal log-likelihood: -14161.854
+Rate parameters:  A-C: 1.11747  A-G: 1.03552  A-T: 1.01213  C-G: 0.90094  C-T: 0.85306  G-T: 1.00000
+Base frequencies:  A: 0.264  C: 0.328  G: 0.248  T: 0.160
+Proportion of invariable sites: 0.008
+Gamma shape alpha: 0.996
+Parameters optimization took 1 rounds (0.009 sec)
+BEST SCORE FOUND : -14161.854
+Total tree length: 20.137
+
+Total number of iterations: 2
+CPU time used for tree search: 0.086 sec (0h:0m:0s)
+Wall-clock time used for tree search: 0.088 sec (0h:0m:0s)
+Total CPU time used: 0.215 sec (0h:0m:0s)
+Total wall-clock time used: 0.221 sec (0h:0m:0s)
+
+Analysis results written to: 
+  IQ-TREE report:                data/10_infer.iqtree
+  Maximum-likelihood tree:       data/10_infer.treefile
+  Likelihood distances:          data/10_infer.mldist
+  Screen log file:               data/10_infer.log
+
+Date and Time: Thu Apr  9 22:03:49 2026

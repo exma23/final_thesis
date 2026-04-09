@@ -6,6 +6,7 @@ from agents.agent import Agent
 from trainer.config import Config
 from trainer.replay_buffer import ReplayBuffer
 import common
+import utils
 
 
 class Trainer:
@@ -28,7 +29,6 @@ class Trainer:
 
         # ── Episode memory for REINFORCE ──
         self.episode_memory = []
-
 
         if self.rl_cfg.loss_type == common.NetworkType.QLearning.value:
             self.buffer = ReplayBuffer(
@@ -78,10 +78,7 @@ class Trainer:
 
             X = torch.tensor(feats, dtype=torch.float32,
                              device=self.train_cfg.device)
-            X[:, [1, 2, 3, 5, 6]] /= (X[:, 0:1] + 1e-8)     # branch-length features / total_bl
-            X[:, [7, 8, 9, 10]] /= 30.0                       # leaf counts / n_taxa (30 taxa)
-            X[:, [11, 12, 13, 14]] /= (X[:, 0:1] + 1e-8)     # subtree BLs / total_bl
-            X[:, [15, 16, 17, 18]] /= (X[:, 0:1] + 1e-8)     # longest BLs / total_bl
+            X = utils.normalize_features(X)
             with torch.no_grad():
                 logits = self.agent.network(X).squeeze(-1)
                 probs = torch.softmax(logits, dim=0)

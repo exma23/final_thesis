@@ -105,7 +105,7 @@ static std::string rand_tree(int n, std::mt19937 &rng) {
 // ── main ─────────────────────────────────────────────────
 
 int main(int argc, char **argv) {
-  int taxa = 20, len = 500, num = 10;
+  int taxa = 30, len = 500, num = 20;
   unsigned seed = time(nullptr);
   std::string outdir = "data",
               iqtree = "/home/ha/miniconda3/envs/thesis/bin/iqtree3",
