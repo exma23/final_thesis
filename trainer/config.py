@@ -23,7 +23,11 @@ class InferConfig:
 class RLConfig:
     n_steps: int
     loss_type: str
-    gamma: float = 0.99
+    gamma: float = 0.9
+    # REINFORCE specific
+    pg_episodes_in_memory: int = 2    # ← NEW
+    pg_epochs: int = 10               # ← NEW
+    pg_batch_size: int = 64           # ← NEW
     # Q-learning specific
     buffer_size: int = 10000
     batch_size: int = 32

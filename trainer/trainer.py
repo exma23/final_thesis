@@ -6,7 +6,7 @@ from agents.agent import Agent
 from trainer.config import Config
 from trainer.replay_buffer import ReplayBuffer
 import common
-
+import random
 
 class Trainer:
     def __init__(self, config: Config, env: Environment, agent: Agent):
@@ -21,6 +21,14 @@ class Trainer:
             lr=self.train_cfg.learning_rate,
             weight_decay=self.train_cfg.weight_decay,
         )
+
+        self.scheduler = torch.optim.lr_scheduler.StepLR(
+            self.optimizer, step_size=50, gamma=0.32
+        )
+
+        # ── Episode memory for REINFORCE ──
+        self.episode_memory = []
+
 
         if self.rl_cfg.loss_type == common.NetworkType.QLearning.value:
             self.buffer = ReplayBuffer(
@@ -44,25 +52,36 @@ class Trainer:
     def _train_reinforce(self):
         for epoch in range(self.train_cfg.num_epoch):
             tree_cur = np.random.choice(self.env.tree_indices)
-            self.env.tree_state[tree_cur] = self.env.tree_start[tree_cur]  # ← RESET
+            self.env.tree_state[tree_cur] = self.env.tree_start[tree_cur]
+
             transitions = self._rollout(tree_cur)
             rewards = [t['reward'] for t in transitions]
             returns = self._compute_returns(rewards, self.rl_cfg.gamma)
-            self._update_reinforce(transitions, returns)
+
+            # ── Store episode ──
+            self.episode_memory.append((transitions, returns))
+            if len(self.episode_memory) > self.rl_cfg.pg_episodes_in_memory:
+                self.episode_memory.pop(0)
+
+            # ── Train multi-epoch on stored episodes ──
+            if len(self.episode_memory) >= self.rl_cfg.pg_episodes_in_memory:
+                self._update_reinforce_batched()
+
+            # ── Step LR scheduler ──
+            self.scheduler.step()
 
             if epoch % 50 == 0:
+                lr_now = self.optimizer.param_groups[0]['lr']
                 print(f"Epoch {epoch}/{self.train_cfg.num_epoch} "
-                      f"tree={tree_cur} reward={sum(rewards):.4f}")
+                      f"tree={tree_cur} reward={sum(rewards):.4f} lr={lr_now:.6f}")
 
     def _rollout(self, tree_idx):
         cur_newick = self.env.tree_state[tree_idx]
         gt_newick = self.env.tree_gt[tree_idx]
-        action_idx = -1                              # ← CHANGED
+        action_idx = -1
         transitions = []
 
         for step in range(self.rl_cfg.n_steps):
-            # if step % 10 == 0:
-            #     print(f'at step {step}')
             new_newick, actions, feats, rewards = \
                 self.env.cpp.get_state_action(
                     cur_newick, action_idx, gt_newick,
@@ -70,15 +89,12 @@ class Trainer:
 
             X = torch.tensor(feats, dtype=torch.float32,
                              device=self.train_cfg.device)
-            X[:, [1, 2, 3, 5, 6]] /= (X[:, 0:1] + 1e-8)     # branch-length features / total_bl
-            X[:, [7, 8, 9, 10]] /= 30.0                       # leaf counts / n_taxa (30 taxa)
-            X[:, [11, 12, 13, 14]] /= (X[:, 0:1] + 1e-8)     # subtree BLs / total_bl
-            X[:, [15, 16, 17, 18]] /= (X[:, 0:1] + 1e-8)     # longest BLs / total_bl
-            with torch.no_grad():
-                logits = self.agent.network(X).squeeze(-1)
-                probs = torch.softmax(logits, dim=0)
+            X[:, [1, 2, 3, 5, 6]] /= (X[:, 0:1] + 1e-8)
+            X[:, [7, 8, 9, 10]] /= 30.0
+            X[:, [11, 12, 13, 14]] /= (X[:, 0:1] + 1e-8)
+            X[:, [15, 16, 17, 18]] /= (X[:, 0:1] + 1e-8)
 
-            if step % 10 == 0:  # in ở step đầu mỗi epoch
+            if step % 10 == 0:
                 with torch.no_grad():
                     logits = self.agent.network(X).squeeze(-1)
                     probs = torch.softmax(logits, dim=0)
@@ -86,12 +102,16 @@ class Trainer:
                 print(f"  Top-5 reward actions (step {step}):")
                 for rank, i in enumerate(top5):
                     print(f"    #{rank+1} idx={i} r={rewards[i]:.2f} prob={probs[i].item():.4f}")
-            _, action_idx = self.agent.choose(actions, X)  # ← CHANGED: only need idx
+
+            _, action_idx = self.agent.choose(actions, X)
+
+            # ── Clip reward ──
+            r = max(0.0, float(rewards[action_idx]))
 
             transitions.append({
                 'features': X,
                 'action_idx': action_idx,
-                'reward': float(rewards[action_idx]),
+                'reward': r,
             })
             cur_newick = new_newick
 
@@ -106,6 +126,40 @@ class Trainer:
         for t in range(T - 2, -1, -1):
             G[t] = rewards[t] + gamma * G[t + 1]
         return G
+
+    def _update_reinforce_batched(self):
+        """Multi-epoch mini-batch training over stored episodes (à la bmepRL)."""
+        # 1. Flatten all episodes into (features, action_idx, return_value)
+        all_data = []
+        for transitions, returns in self.episode_memory:
+            G = torch.tensor(returns, dtype=torch.float32,
+                             device=self.train_cfg.device)
+            G = (G - G.mean()) / (G.std() + 1e-8)
+            for t, g_t in zip(transitions, G):
+                all_data.append((t['features'], t['action_idx'], g_t))
+
+        # 2. Train multiple epochs with mini-batches
+        bs = self.rl_cfg.pg_batch_size
+        for _ in range(self.rl_cfg.pg_epochs):
+            random.shuffle(all_data)
+            for start in range(0, len(all_data), bs):
+                batch = all_data[start:start + bs]
+                loss = torch.tensor(0.0, device=self.train_cfg.device)
+
+                for features, action_idx, G_t in batch:
+                    logits = self.agent.forward(features).squeeze(-1)
+                    log_probs = torch.log_softmax(logits, dim=0)
+                    loss += -log_probs[action_idx] * G_t
+
+                    probs = torch.softmax(logits, dim=0)
+                    entropy = -(probs * log_probs).sum()
+                    loss += -0.01 * entropy
+
+                loss = loss / len(batch)
+                self.optimizer.zero_grad()
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.agent.parameters(), max_norm=1.0)
+                self.optimizer.step()
 
     def _update_reinforce(self, transitions, returns):
         G = torch.tensor(returns, dtype=torch.float32, device=self.train_cfg.device)
