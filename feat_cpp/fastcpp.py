@@ -10,6 +10,7 @@ class FastCpp:
             ctypes.c_char_p,               # newick_str
             ctypes.c_int,                  # action_idx       ← CHANGED
             ctypes.c_char_p,               # gt_newick_str
+            ctypes.c_int,                  # spr_radius     ← THÊM
             ctypes.c_char_p,               # out_newick
             ctypes.c_int,                  # out_newick_cap
             ctypes.POINTER(ctypes.c_int),  # out_actions  (flat n*3)
@@ -24,6 +25,7 @@ class FastCpp:
         newick: str,
         action_idx: int,                            # ← CHANGED
         gt_newick: str,
+        spr_radius: int = common.DEFAULT_SPR_RADIUS,           # ← THÊM (0 = không giới hạn)
         max_actions: int = 10000,
     ) -> Tuple[str, np.ndarray, np.ndarray, np.ndarray]:
         out_newick_cap = 65536
@@ -37,6 +39,7 @@ class FastCpp:
             newick.encode('utf-8'),
             ctypes.c_int(action_idx),                # ← CHANGED
             gt_newick.encode('utf-8'),
+            ctypes.c_int(spr_radius),      # ← THÊM
             out_newick,
             ctypes.c_int(out_newick_cap),
             out_actions.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),

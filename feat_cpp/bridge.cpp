@@ -115,6 +115,7 @@ extern "C" {
 void get_state_action_c(const char *newick_str,
                         int action_idx,            /* index into previous action list, or -1 */
                         const char *gt_newick_str,
+                        int sprDist,
                         char *out_newick,
                         int out_newick_cap,
                         int *out_actions,        /* flat n*3 */
@@ -139,7 +140,6 @@ void get_state_action_c(const char *newick_str,
 
   /* 2. apply SPR if action is valid */
   if (action_idx >= 0) {
-    int sprDist = tr->mxtips;
     std::vector<actionXy> prev = computeAllActions(tr, gt, &pr, sprDist);
     if (action_idx < (int)prev.size()) {
       applySPR(tr, &pr, prev[action_idx].pruned,
@@ -157,7 +157,6 @@ void get_state_action_c(const char *newick_str,
     out_newick[--len] = '\0';
 
   /* 4. enumerate all SPR moves with features + RF reward */
-  int sprDist = tr->mxtips;
   std::vector<actionXy> actions = computeAllActions(tr, gt, &pr, sprDist);
 
   /* 5. copy to output arrays */
