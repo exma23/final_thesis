@@ -113,7 +113,7 @@ static bool applySPR(pllInstance *tr, partitionList *pr, int pruned,
 extern "C" {
 
 void get_state_action_c(const char *newick_str,
-                        const int *action,       /* [pruned, pruned_back, regraft] or [-1,-1,-1] */
+                        int action_idx,            /* index into previous action list, or -1 */
                         const char *gt_newick_str,
                         char *out_newick,
                         int out_newick_cap,
@@ -138,8 +138,14 @@ void get_state_action_c(const char *newick_str,
   pr.perGeneBranchLengths = PLL_FALSE;
 
   /* 2. apply SPR if action is valid */
-  if (action[0] != -1) {
-    applySPR(tr, &pr, action[0], action[1], action[2]);
+  if (action_idx >= 0) {
+    int sprDist = tr->mxtips;
+    std::vector<actionXy> prev = computeAllActions(tr, gt, &pr, sprDist);
+    if (action_idx < (int)prev.size()) {
+      applySPR(tr, &pr, prev[action_idx].pruned,
+               prev[action_idx].pruned_back,
+               prev[action_idx].regraft);
+    }
   }
 
   /* 3. write current tree to output buffer */

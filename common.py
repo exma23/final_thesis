@@ -23,7 +23,7 @@ class NetworkType(Enum):
 
 ACT_DIM = 3  # [pruned, pruned_back, regraft]
 FEAT_DIM = 19
-INITIAL_ACTION = (-1, -1, -1)
+INITIAL_ACTION = -1
 
 NAME_TREEFILE = "newick"
 POSTFIX_GT = f"_gt.{NAME_TREEFILE}"

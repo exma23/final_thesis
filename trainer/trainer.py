@@ -55,16 +55,16 @@ class Trainer:
     def _rollout(self, tree_idx):
         cur_newick = self.env.tree_state[tree_idx]
         gt_newick = self.env.tree_gt[tree_idx]
-        action = common.INITIAL_ACTION
+        action_idx = -1                              # ← CHANGED
         transitions = []
 
         for step in range(self.rl_cfg.n_steps):
             new_newick, actions, feats, rewards = \
-                self.env.cpp.get_state_action(cur_newick, action, gt_newick)
+                self.env.cpp.get_state_action(cur_newick, action_idx, gt_newick)
 
             X = torch.tensor(feats, dtype=torch.float32,
                              device=self.train_cfg.device)
-            action, action_idx = self.agent.choose(actions, X)
+            _, action_idx = self.agent.choose(actions, X)  # ← CHANGED: only need idx
 
             transitions.append({
                 'features': X,
@@ -112,7 +112,7 @@ class Trainer:
 
             cur_newick, cur_actions, cur_feats, cur_rewards = \
                 self.env.cpp.get_state_action(
-                    cur_newick, common.INITIAL_ACTION, gt_newick)
+                    cur_newick, -1, gt_newick)            # ← CHANGED
 
             for step in range(self.rl_cfg.n_steps):
                 X = torch.tensor(cur_feats, dtype=torch.float32,
@@ -124,7 +124,8 @@ class Trainer:
                 epoch_reward += reward
 
                 next_newick, next_actions, next_feats, next_rewards = \
-                    self.env.cpp.get_state_action(cur_newick, action, gt_newick)
+                    self.env.cpp.get_state_action(
+                        cur_newick, action_idx, gt_newick)
                 next_X = torch.tensor(next_feats, dtype=torch.float32,
                                       device=self.train_cfg.device)
 

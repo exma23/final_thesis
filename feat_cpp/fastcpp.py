@@ -8,7 +8,7 @@ class FastCpp:
         self.lib = ctypes.CDLL(lib_path)
         self.lib.get_state_action_c.argtypes = [
             ctypes.c_char_p,               # newick_str
-            ctypes.POINTER(ctypes.c_int),  # action[3]
+            ctypes.c_int,                  # action_idx       ← CHANGED
             ctypes.c_char_p,               # gt_newick_str
             ctypes.c_char_p,               # out_newick
             ctypes.c_int,                  # out_newick_cap
@@ -22,12 +22,11 @@ class FastCpp:
     def get_state_action(
         self,
         newick: str,
-        action_chosen: Tuple[int, int, int],
+        action_idx: int,                            # ← CHANGED
         gt_newick: str,
         max_actions: int = 10000,
     ) -> Tuple[str, np.ndarray, np.ndarray, np.ndarray]:
         out_newick_cap = 65536
-        action_arr  = np.array(action_chosen, dtype=np.int32)
         out_newick  = ctypes.create_string_buffer(out_newick_cap)
         out_actions = np.zeros(max_actions * common.ACT_DIM, dtype=np.int32)
         out_feats   = np.zeros(max_actions * common.FEAT_DIM, dtype=np.float64)
@@ -36,7 +35,7 @@ class FastCpp:
 
         self.lib.get_state_action_c(
             newick.encode('utf-8'),
-            action_arr.ctypes.data_as(ctypes.POINTER(ctypes.c_int)),
+            ctypes.c_int(action_idx),                # ← CHANGED
             gt_newick.encode('utf-8'),
             out_newick,
             ctypes.c_int(out_newick_cap),
