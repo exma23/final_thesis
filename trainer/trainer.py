@@ -85,7 +85,7 @@ class Trainer:
                 top5 = sorted(range(len(rewards)), key=lambda i: rewards[i], reverse=True)[:5]
                 print(f"  Top-5 reward actions (step {step}):")
                 for rank, i in enumerate(top5):
-                    print(f"    #{rank+1} idx={i} r={rewards[i]:.2f} prob={probs[i]:.4f}")
+                    print(f"    #{rank+1} idx={i} r={rewards[i]:.2f} prob={probs[i].item():.4f}")
             _, action_idx = self.agent.choose(actions, X)  # ← CHANGED: only need idx
 
             transitions.append({
