@@ -20,8 +20,7 @@ class FFNet(nn.Module):
     def forward(self, x):
         x = self.emb_layer(x)
         for l_i in self.layers:
-            x = x + F.leaky_relu(l_i(x))
-        x = self.out_layer(x)
+            x = x.detach() + F.leaky_relu(l_i(x))   # bmepRL        x = self.out_layer(x)
         return x
 
     def last_layer(self):
