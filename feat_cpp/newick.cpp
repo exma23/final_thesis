@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "errcodes.hpp"
 #include "hash.hpp"
 #include "lexer.hpp"
 #include "mem_alloc.hpp"
@@ -437,4 +438,67 @@ void pllNewickParseDestroy(pllNewickTree **t) {
 
   rax_free(*t);
   (*t) = NULL;
+}
+
+int pllValidateNewick(pllNewickTree *t) {
+  pllStack *head;
+  pllNewickNodeInfo *item;
+  int correct = 0;
+
+  item = (pllNewickNodeInfo *)t->tree->item;
+  if (item->rank != 2 && item->rank != 3)
+    return (0);
+  head = t->tree->next;
+  while (head) {
+    item = (pllNewickNodeInfo *)head->item;
+    if (item->rank != 2 && item->rank != 0) {
+      return (0);
+    }
+    head = head->next;
+  }
+
+  item = (pllNewickNodeInfo *)t->tree->item;
+
+  if (item->rank == 2) {
+    correct = (t->nodes == 2 * t->tips - 1);
+    if (correct) {
+      errno = PLL_NEWICK_ROOTED_TREE;
+    } else {
+      errno = PLL_NEWICK_BAD_STRUCTURE;
+    }
+    return (PLL_FALSE);
+  }
+
+  correct = ((t->nodes == 2 * t->tips - 2) && t->nodes != 4);
+  if (correct)
+    return (PLL_TRUE);
+
+  errno = PLL_NEWICK_BAD_STRUCTURE;
+
+  return (1);
+}
+
+int pllNewickUnroot(pllNewickTree *t) {
+  pllStack *tmp;
+  pllNewickNodeInfo *item;
+
+  item = (pllNewickNodeInfo *)t->tree->item;
+  if (item->rank == 2) {
+    item->rank = 3;
+    t->nodes--;
+    item = (pllNewickNodeInfo *)t->tree->next->item;
+    if (item->rank == 0) {
+      tmp = t->tree->next->next;
+      t->tree->next->next = t->tree->next->next->next;
+    } else {
+      tmp = t->tree->next;
+      t->tree->next = t->tree->next->next;
+    }
+    item = (pllNewickNodeInfo *)tmp->item;
+    rax_free(item->name);
+    rax_free(tmp->item);
+    rax_free(tmp);
+  }
+
+  return (pllValidateNewick(t));
 }

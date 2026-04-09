@@ -47,7 +47,7 @@ pllBoolean insertBIG(pllInstance *tr, partitionList *pr, nodeptr p, nodeptr q) {
   /* Simple branch-length split: sqrt of the original edge prop. */
   double z[PLL_NUM_BRANCHES];
   for (i = 0; i < numBranches; i++) {
-    z[i] = sqrt(q->z[i]);
+    z[i] = q->z[i];
     if (z[i] < PLL_ZMIN)
       z[i] = PLL_ZMIN;
     if (z[i] > PLL_ZMAX)

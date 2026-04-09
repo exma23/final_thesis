@@ -1,6 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class FFNet(nn.Module):
     def __init__(self, in_features, out_features, device, layers=None):
         super().__init__()
@@ -19,8 +20,7 @@ class FFNet(nn.Module):
     def forward(self, x):
         x = self.emb_layer(x)
         for l_i in self.layers:
-            x = x.detach() + F.leaky_relu(l_i(x))
-
+            x = x + F.leaky_relu(l_i(x))
         x = self.out_layer(x)
         return x
 

@@ -25,5 +25,14 @@ struct SPRFeatures {
   double longest_bl_b2;        /* feat 19 */
 };
 
-std::vector<SPRFeatures> computeAllSPRFeatures(pllInstance *tr,
-                                               partitionList *pr, int sprDist);
+struct actionXy {
+  int pruned;       /* id of pruned node */
+  int regraft;      /* id of regrafted node */
+  SPRFeatures feat; /* encoded state + action */
+  int pruned_back;  // thêm: p->back->number để xác định rotation
+  int reward; /* minus RF distance from the truth tree to state after apply the
+                 SPR move */
+};
+
+std::vector<SPRFeatures> computeAllSPRFeatures(pllInstance *tr, partitionList *pr, int sprDist);
+std::vector<actionXy> computeAllActions(pllInstance *tr, pllInstance *gt_tr, partitionList *pr, int sprDist);

@@ -1,7 +1,9 @@
 #include "features.hpp"
+#include "hash.hpp"
 #include "mem_alloc.hpp"
 #include "pllInternal.hpp"
 #include "utils.hpp"
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 #include <fstream>
@@ -316,6 +318,304 @@ std::vector<SPRFeatures> computeAllSPRFeatures(pllInstance *tr,
     rearrangeFeatures(tr, tr->nodep[i], 1, sprDist, treeTotalBL, treeLongestBL,
                       totalLeaves, results);
   }
+
+  return results;
+}
+/* ============================================================
+ * RF distance helpers
+ * ============================================================ */
+
+static void resetXBips(pllInstance *tr) {
+  for (int i = tr->mxtips + 1; i < 2 * tr->mxtips; i++) {
+    tr->nodep[i]->xBips = 1;
+    tr->nodep[i]->next->xBips = 0;
+    tr->nodep[i]->next->next->xBips = 0;
+  }
+}
+
+static void freeBitVectors(unsigned int **v, int n) {
+  for (int i = 1; i < n; i++)
+    rax_free(v[i]);
+}
+
+static void freeHashRFData(pllHashTable *h) {
+  for (unsigned int k = 0; k < h->size; k++) {
+    for (pllHashItem *hitem = h->Items[k]; hitem; hitem = hitem->next) {
+      pllBipartitionEntry *e = (pllBipartitionEntry *)hitem->data;
+      if (e) {
+        if (e->bitVector)
+          rax_free(e->bitVector);
+        if (e->treeVector)
+          rax_free(e->treeVector);
+        if (e->supportVector)
+          rax_free(e->supportVector);
+        rax_free(e);
+      }
+    }
+  }
+}
+
+/* Collect all bipartitions of a tree into a sorted vector */
+static std::vector<std::vector<unsigned int>>
+collectBipartitions(pllInstance *tr, unsigned int **bitVectors,
+                    unsigned int vLength) {
+  std::vector<std::vector<unsigned int>> result;
+  resetXBips(tr);
+  pllHashTable *h = pllHashInit(tr->mxtips * 4);
+  int bCounter = 0;
+  bitVectorInitravSpecial(bitVectors, tr->nodep[1]->back, tr->mxtips, vLength,
+                          h, 0, PLL_BIPARTITIONS_RF, NULL, &bCounter, 1,
+                          PLL_FALSE, PLL_FALSE, 0);
+  for (unsigned int k = 0; k < h->size; k++)
+    for (pllHashItem *hitem = h->Items[k]; hitem; hitem = hitem->next) {
+      pllBipartitionEntry *e = (pllBipartitionEntry *)hitem->data;
+      result.emplace_back(e->bitVector, e->bitVector + vLength);
+    }
+  freeHashRFData(h);
+  pllHashDestroy(&h, 0);
+  std::sort(result.begin(), result.end());
+  return result;
+}
+
+/* RF = symmetric difference between two sorted bipartition sets */
+static int rfFromSortedSets(const std::vector<std::vector<unsigned int>> &a,
+                            const std::vector<std::vector<unsigned int>> &b) {
+  size_t shared = 0, i = 0, j = 0;
+  while (i < a.size() && j < b.size()) {
+    if (a[i] < b[j])
+      i++;
+    else if (b[j] < a[i])
+      j++;
+    else {
+      shared++;
+      i++;
+      j++;
+    }
+  }
+  return (int)(a.size() + b.size() - 2 * shared);
+}
+
+/* ============================================================
+ * SPR traversal with RF reward computation
+ * ============================================================ */
+
+static void addTraverseActions(
+    pllInstance *tr, partitionList *pr, nodeptr pruneNode, nodeptr q,
+    int mintrav, int maxtrav, int depth, double pathBLSum, double pruneBL,
+    int n_leaves_a, double total_bl_a, double longest_bl_a, double treeTotalBL,
+    double treeLongestBL, int totalLeaves, unsigned int **bitVectors,
+    unsigned int vLength, const std::vector<std::vector<unsigned int>> &gtBips,
+    std::vector<actionXy> &results) {
+  if (!q)
+    return;
+  if (--mintrav <= 0) {
+    actionXy ax = {};
+    ax.pruned = pruneNode->number;
+    ax.regraft = q->number;
+    ax.pruned_back = pruneNode->back->number; // ← thêm dòng này
+
+    SPRFeatures &f = ax.feat;
+    f.total_branch_lengths = treeTotalBL;
+    f.longest_branch = treeLongestBL;
+    f.prune_branch_len = pruneBL;
+
+    double regraftBL = branchLength(q->z[0]);
+    f.regraft_branch_len = regraftBL;
+    f.topo_distance = depth;
+    f.branch_len_distance = pathBLSum;
+    f.new_branch_len = regraftBL / 2.0;
+
+    f.n_leaves_a = n_leaves_a;
+    f.total_bl_a = total_bl_a;
+    f.longest_bl_a = longest_bl_a;
+
+    f.n_leaves_b1 = countLeaves(q, tr->mxtips);
+    f.n_leaves_b2 = countLeaves(q->back, tr->mxtips);
+    f.n_leaves_b = f.n_leaves_b1 + f.n_leaves_b2;
+
+    f.total_bl_b1 = subtreeBLSum(q, tr->mxtips);
+    f.total_bl_b2 = subtreeBLSum(q->back, tr->mxtips);
+    f.total_bl_b = f.total_bl_b1 + f.total_bl_b2 + regraftBL;
+
+    f.longest_bl_b1 = subtreeLongestBL(q, tr->mxtips);
+    f.longest_bl_b2 = subtreeLongestBL(q->back, tr->mxtips);
+    f.longest_bl_b = regraftBL;
+    if (f.longest_bl_b1 > f.longest_bl_b)
+      f.longest_bl_b = f.longest_bl_b1;
+    if (f.longest_bl_b2 > f.longest_bl_b)
+      f.longest_bl_b = f.longest_bl_b2;
+
+    /* Save edge q↔qBack, insert pruneNode, compute RF, restore */
+    nodeptr qBack = q->back;
+    double savedQZ[PLL_NUM_BRANCHES];
+    for (int i = 0; i < PLL_NUM_BRANCHES; i++)
+      savedQZ[i] = q->z[i];
+
+    insertBIG(tr, pr, pruneNode, q);
+    auto trBips = collectBipartitions(tr, bitVectors, vLength);
+    ax.reward = -rfFromSortedSets(trBips, gtBips);
+
+    /* Restore to pruned state */
+    hookup(q, qBack, savedQZ, PLL_NUM_BRANCHES);
+    pruneNode->next->back = pruneNode->next->next->back = (node *)NULL;
+
+    results.push_back(ax);
+  }
+
+  if ((q->number > tr->mxtips) && (--maxtrav > 0)) {
+    double newPathBLSum = pathBLSum + branchLength(q->z[0]);
+
+    addTraverseActions(tr, pr, pruneNode, q->next->back, mintrav, maxtrav,
+                       depth + 1, newPathBLSum, pruneBL, n_leaves_a, total_bl_a,
+                       longest_bl_a, treeTotalBL, treeLongestBL, totalLeaves,
+                       bitVectors, vLength, gtBips, results);
+    addTraverseActions(tr, pr, pruneNode, q->next->next->back, mintrav, maxtrav,
+                       depth + 1, newPathBLSum, pruneBL, n_leaves_a, total_bl_a,
+                       longest_bl_a, treeTotalBL, treeLongestBL, totalLeaves,
+                       bitVectors, vLength, gtBips, results);
+  }
+}
+
+static void
+rearrangeActions(pllInstance *tr, partitionList *pr, nodeptr p, int mintrav,
+                 int maxtrav, double treeTotalBL, double treeLongestBL,
+                 int totalLeaves, unsigned int **bitVectors,
+                 unsigned int vLength,
+                 const std::vector<std::vector<unsigned int>> &gtBips,
+                 std::vector<actionXy> &results) {
+  if (maxtrav > totalLeaves - 3)
+    maxtrav = totalLeaves - 3;
+  if (maxtrav < mintrav)
+    return;
+  nodeptr q = p->back;
+
+  /* === P side: prune subtree hanging from p->back === */
+  if (p->number > tr->mxtips) {
+    nodeptr p1 = p->next->back;
+    nodeptr p2 = p->next->next->back;
+    if ((p1->number > tr->mxtips) || (p2->number > tr->mxtips)) {
+      double pruneBL = branchLength(p->z[0]);
+      int n_a = countLeaves(p, tr->mxtips);
+      double tbl_a = subtreeBLSum(p, tr->mxtips);
+      double lbl_a = subtreeLongestBL(p, tr->mxtips);
+
+      double savedZ1[PLL_NUM_BRANCHES], savedZ2[PLL_NUM_BRANCHES];
+      removeNodeBL(p, savedZ1, savedZ2);
+
+      double bl_to_p1 = branchLength(savedZ1[0]);
+      double bl_to_p2 = branchLength(savedZ2[0]);
+
+      if (p1->number > tr->mxtips) {
+        addTraverseActions(tr, pr, p, p1->next->back, mintrav, maxtrav, 1,
+                           bl_to_p1, pruneBL, n_a, tbl_a, lbl_a, treeTotalBL,
+                           treeLongestBL, totalLeaves, bitVectors, vLength,
+                           gtBips, results);
+        addTraverseActions(tr, pr, p, p1->next->next->back, mintrav, maxtrav, 1,
+                           bl_to_p1, pruneBL, n_a, tbl_a, lbl_a, treeTotalBL,
+                           treeLongestBL, totalLeaves, bitVectors, vLength,
+                           gtBips, results);
+      }
+      if (p2->number > tr->mxtips) {
+        addTraverseActions(tr, pr, p, p2->next->back, mintrav, maxtrav, 1,
+                           bl_to_p2, pruneBL, n_a, tbl_a, lbl_a, treeTotalBL,
+                           treeLongestBL, totalLeaves, bitVectors, vLength,
+                           gtBips, results);
+        addTraverseActions(tr, pr, p, p2->next->next->back, mintrav, maxtrav, 1,
+                           bl_to_p2, pruneBL, n_a, tbl_a, lbl_a, treeTotalBL,
+                           treeLongestBL, totalLeaves, bitVectors, vLength,
+                           gtBips, results);
+      }
+
+      restoreNodeBL(p, p1, p2, savedZ1, savedZ2);
+    }
+  }
+
+  /* === Q side: prune subtree hanging from q->back = p === */
+  if ((q->number > tr->mxtips) && (maxtrav > 0)) {
+    nodeptr q1 = q->next->back;
+    nodeptr q2 = q->next->next->back;
+    if (!q1 || !q2) {
+      fprintf(stderr,
+              "  [Q-SIDE] SKIP node %d: q=%d has NULL neighbor (q1=%p q2=%p)\n",
+              p->number, q->number, q1, q2);
+      return;
+    }
+
+    if (((q1->number > tr->mxtips) && q1->next && q1->next->back &&
+         q1->next->next && q1->next->next->back &&
+         ((q1->next->back->number > tr->mxtips) ||
+          (q1->next->next->back->number > tr->mxtips))) ||
+        ((q2->number > tr->mxtips) && q2->next && q2->next->back &&
+         q2->next->next && q2->next->next->back &&
+         ((q2->next->back->number > tr->mxtips) ||
+          (q2->next->next->back->number > tr->mxtips)))) {
+      double pruneBL = branchLength(q->z[0]);
+      int n_a = countLeaves(q, tr->mxtips);
+      double tbl_a = subtreeBLSum(q, tr->mxtips);
+      double lbl_a = subtreeLongestBL(q, tr->mxtips);
+
+      double savedZ1[PLL_NUM_BRANCHES], savedZ2[PLL_NUM_BRANCHES];
+      removeNodeBL(q, savedZ1, savedZ2);
+
+      int mintrav2 = mintrav > 2 ? mintrav : 2;
+      double bl_to_q1 = branchLength(savedZ1[0]);
+      double bl_to_q2 = branchLength(savedZ2[0]);
+
+      if (q1->number > tr->mxtips) {
+        addTraverseActions(tr, pr, q, q1->next->back, mintrav2, maxtrav, 1,
+                           bl_to_q1, pruneBL, n_a, tbl_a, lbl_a, treeTotalBL,
+                           treeLongestBL, totalLeaves, bitVectors, vLength,
+                           gtBips, results);
+        addTraverseActions(tr, pr, q, q1->next->next->back, mintrav2, maxtrav,
+                           1, bl_to_q1, pruneBL, n_a, tbl_a, lbl_a, treeTotalBL,
+                           treeLongestBL, totalLeaves, bitVectors, vLength,
+                           gtBips, results);
+      }
+      if (q2->number > tr->mxtips) {
+        addTraverseActions(tr, pr, q, q2->next->back, mintrav2, maxtrav, 1,
+                           bl_to_q2, pruneBL, n_a, tbl_a, lbl_a, treeTotalBL,
+                           treeLongestBL, totalLeaves, bitVectors, vLength,
+                           gtBips, results);
+        addTraverseActions(tr, pr, q, q2->next->next->back, mintrav2, maxtrav,
+                           1, bl_to_q2, pruneBL, n_a, tbl_a, lbl_a, treeTotalBL,
+                           treeLongestBL, totalLeaves, bitVectors, vLength,
+                           gtBips, results);
+      }
+
+      restoreNodeBL(q, q1, q2, savedZ1, savedZ2);
+    }
+  }
+}
+
+std::vector<actionXy> computeAllActions(pllInstance *tr, pllInstance *gt_tr,
+                                        partitionList *pr, int sprDist) {
+  std::vector<actionXy> results;
+
+  double treeTotalBL, treeLongestBL;
+  wholeTreeStats(tr, treeTotalBL, treeLongestBL);
+  int totalLeaves = tr->mxtips;
+
+  unsigned int vLength;
+  unsigned int **bitVectors = initBitVector(totalLeaves, &vLength);
+
+  /* Precompute GT bipartitions ONCE */
+  auto gtBips = collectBipartitions(gt_tr, bitVectors, vLength);
+  auto baseBips = collectBipartitions(tr, bitVectors, vLength);
+  int baseRF = rfFromSortedSets(baseBips, gtBips);
+
+  for (int i = 1; i <= 2 * tr->mxtips - 2; i++) {
+    if (!tr->nodep[i] || tr->nodep[i]->z[0] <= 0.0)
+      continue;
+    rearrangeActions(tr, pr, tr->nodep[i], 1, sprDist, treeTotalBL,
+                     treeLongestBL, totalLeaves, bitVectors, vLength, gtBips,
+                     results);
+  }
+
+  for (auto &ax : results)
+    ax.reward = baseRF + ax.reward;
+
+  freeBitVectors(bitVectors, 2 * totalLeaves);
+  rax_free(bitVectors);
 
   return results;
 }

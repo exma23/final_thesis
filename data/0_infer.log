@@ -1,0 +1,84 @@
+IQ-TREE version 3.1.1 for Linux x86 64-bit built Apr  8 2026
+Developed by Bui Quang Minh, Thomas Wong, Nhan Ly-Trong, Huaiyan Ren
+Contributed by Lam-Tung Nguyen, Dominik Schrempf, Chris Bielow,
+Olga Chernomor, Michael Woodhams, Diep Thi Hoang, Heiko Schmidt
+
+Host:    ha-ThinkPad-E14-Gen-5 (AVX2, FMA3, 31 GB RAM)
+Command: /home/ha/miniconda3/envs/thesis/bin/iqtree3 -s data/0.phy -m GTR+I+G --prefix data/0_infer -fast --seed 0
+Seed:    0 (Using SPRNG - Scalable Parallel Random Number Generator)
+Time:    Thu Apr  9 07:00:34 2026
+Kernel:  AVX+FMA - 1 threads (16 CPU cores detected)
+
+HINT: Use -nt option to specify number of threads because your CPU has 16 cores!
+HINT: -nt AUTO will automatically determine the best number of threads to use.
+
+Reading alignment file data/0.phy ... Phylip format detected
+Alignment most likely contains DNA/RNA sequences
+Constructing alignment: done in 0.00146889 secs using 77% CPU
+Alignment has 20 sequences with 500 columns, 481 distinct patterns
+452 parsimony-informative, 31 singleton sites, 17 constant sites
+Analyzing sequences: done in 7.6397e-05 secs using 98.17% CPU
+Checking for duplicate sequences: done in 0.000152044 secs
+
+Create initial parsimony tree by phylogenetic likelihood library (PLL)... 0.00 seconds
+
+NOTE: 1 MB RAM (0 GB) is required!
+Estimate model parameters (epsilon = 0.50)
+1. Initial log-likelihood: -10258.87
+2. Current log-likelihood: -10101.27
+3. Current log-likelihood: -10089.98
+4. Current log-likelihood: -10089.12
+Optimal log-likelihood: -10088.98
+Rate parameters:  A-C: 1.09463  A-G: 0.92077  A-T: 1.11090  C-G: 1.15630  C-T: 1.00656  G-T: 1.00000
+Base frequencies:  A: 0.323  C: 0.204  G: 0.234  T: 0.239
+Proportion of invariable sites: 0.015
+Gamma shape alpha: 1.131
+Parameters optimization took 4 rounds (0.093 sec)
+Wrote distance file to... 
+Computing ML distances based on estimated model parameters...
+Calculating distance matrix: done in 0.0136263 secs using 99.91% CPU
+Computing ML distances took 0.013842 sec (of wall-clock time) 0.013842 sec (of CPU time)
+Setting up auxiliary I and S matrices: done in 3.4264e-05 secs using 93.39% CPU
+Constructing RapidNJ tree: done in 7.2113e-05 secs using 122% CPU
+Computing RapidNJ tree took 0.000148 sec (of wall-clock time) 0.000265 sec (of CPU time)
+Log-likelihood of RapidNJ tree: -10171.867
+--------------------------------------------------------------------
+|             INITIALIZING CANDIDATE TREE SET                      |
+--------------------------------------------------------------------
+
+Do NNI search on 2 best initial trees
+Estimate model parameters (epsilon = 0.500)
+BETTER TREE FOUND at iteration 1: -10030.089
+Finish initializing candidate tree set (4)
+Current best tree score: -10030.089 / CPU time: 0.135
+Number of iterations: 2
+TREE SEARCH COMPLETED AFTER 2 ITERATIONS / Time: 0h:0m:0s
+
+--------------------------------------------------------------------
+|                    FINALIZING TREE SEARCH                        |
+--------------------------------------------------------------------
+Performs final model parameters optimization
+Estimate model parameters (epsilon = 0.050)
+1. Initial log-likelihood: -10030.089
+Optimal log-likelihood: -10030.057
+Rate parameters:  A-C: 1.04315  A-G: 0.93731  A-T: 1.08430  C-G: 1.13715  C-T: 0.97557  G-T: 1.00000
+Base frequencies:  A: 0.323  C: 0.204  G: 0.234  T: 0.239
+Proportion of invariable sites: 0.013
+Gamma shape alpha: 1.132
+Parameters optimization took 1 rounds (0.005 sec)
+BEST SCORE FOUND : -10030.057
+Total tree length: 15.169
+
+Total number of iterations: 2
+CPU time used for tree search: 0.134 sec (0h:0m:0s)
+Wall-clock time used for tree search: 0.135 sec (0h:0m:0s)
+Total CPU time used: 0.278 sec (0h:0m:0s)
+Total wall-clock time used: 0.287 sec (0h:0m:0s)
+
+Analysis results written to: 
+  IQ-TREE report:                data/0_infer.iqtree
+  Maximum-likelihood tree:       data/0_infer.treefile
+  Likelihood distances:          data/0_infer.mldist
+  Screen log file:               data/0_infer.log
+
+Date and Time: Thu Apr  9 07:00:34 2026

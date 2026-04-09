@@ -22,3 +22,5 @@ struct pllNewickNodeInfo {
 
 extern pllNewickTree *pllNewickParseString(const char *newick);
 extern void pllNewickParseDestroy(pllNewickTree **);
+int pllValidateNewick(pllNewickTree *t);
+int pllNewickUnroot(pllNewickTree *t);

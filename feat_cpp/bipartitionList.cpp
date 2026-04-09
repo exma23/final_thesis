@@ -1,4 +1,4 @@
-#include "globalVariables.h"
+#include "globalVariables.hpp"
 #include "hash.hpp"
 #include "mem_alloc.hpp"
 #include "pll.hpp"
@@ -59,10 +59,8 @@ static void insertHashRF(unsigned int *bitVector, pllHashTable *h,
   }
   e = initEntry();
 
-  rax_posix_memalign((void **)&(e->bitVector), PLL_BYTE_ALIGNMENT,
-                     (size_t)vectorLength * sizeof(unsigned int));
-  memset(e->bitVector, 0, vectorLength * sizeof(unsigned int));
-
+  e->bitVector =
+      (unsigned int *)rax_calloc((size_t)vectorLength, sizeof(unsigned int));
   e->treeVector = (unsigned int *)rax_calloc((size_t)treeVectorLength,
                                              sizeof(unsigned int));
   if (computeWRF)
@@ -84,9 +82,16 @@ static void insertHashRF(unsigned int *bitVector, pllHashTable *h,
 
 static void newviewBipartitions(unsigned int **bitVectors, nodeptr p, int numsp,
                                 unsigned int vectorLength, int processID) {
-
   if (isTip(p->number, numsp))
     return;
+
+  nodeptr q = p->next->back;
+  nodeptr r = p->next->next->back;
+  if (!q || !r) {
+    while (!p->xBips)
+      getxnodeBips(p);
+    return;
+  }
   {
     nodeptr q = p->next->back, r = p->next->next->back;
 
@@ -148,13 +153,17 @@ void bitVectorInitravSpecial(unsigned int **bitVectors, nodeptr p, int numsp,
     nodeptr q = p->next;
 
     do {
-      bitVectorInitravSpecial(bitVectors, q->back, numsp, vectorLength, h,
-                              treeNumber, function, bInf, countBranches,
-                              treeVectorLength, traverseOnly, computeWRF,
-                              processID);
+      if (q->back) {
+        bitVectorInitravSpecial(bitVectors, q->back, numsp, vectorLength, h,
+                                treeNumber, function, bInf, countBranches,
+                                treeVectorLength, traverseOnly, computeWRF,
+                                processID);
+      }
       q = q->next;
     } while (q != p);
 
+    if (!p->next->back || !p->next->next->back)
+      return;
     newviewBipartitions(bitVectors, p, numsp, vectorLength, processID);
 
     assert(p->xBips);
