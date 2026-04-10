@@ -11,12 +11,14 @@ import utils
 
 
 class Trainer:
-    def __init__(self, config: Config, env: Environment, agent: Agent):
+    def __init__(self, config: Config, env: Environment, agent: Agent, save_dir: str = common.CHECKPOINT_PATH):
         self.rl_cfg = config.rl_cfg
         self.train_cfg = config.train_cfg
         self.phylo_cfg = config.phylo_cfg
         self.env = env
         self.agent = agent
+        self.save_dir = save_dir
+        self.best_reward = float('-inf')
 
         self.optimizer = torch.optim.AdamW(
             self.agent.parameters(),
@@ -59,9 +61,16 @@ class Trainer:
 
             self.scheduler.step()  # ← ADD
 
+            epoch_reward = sum(rewards)
             obj = self.phylo_cfg.obj_func
-            print(f"Epoch {epoch}/{self.train_cfg.num_epoch} "
-                    f"tree={tree_cur} reward={sum(rewards):.4f} obj={obj}")
+            common.logger.info(
+                f"Epoch {epoch}/{self.train_cfg.num_epoch} "
+                f"tree={tree_cur} reward={epoch_reward:.4f} obj={obj}")
+
+
+            if epoch_reward > self.best_reward:
+                self.best_reward = epoch_reward
+                self._save_best(epoch, epoch_reward)
 
     def _rollout(self, tree_idx):
         cur_newick = self.env.tree_state[tree_idx]
@@ -196,10 +205,15 @@ class Trainer:
                 cur_rewards = next_rewards
 
             self.env.tree_state[tree_cur] = cur_newick
+            if epoch_reward > self.best_reward:
+                self.best_reward = epoch_reward
+                self._save_best(epoch, epoch_reward)
+
             if epoch % 50 == 0:
-                print(f"Epoch {epoch}/{self.train_cfg.num_epoch} "
-                      f"tree={tree_cur} reward={epoch_reward:.4f} "
-                      f"eps={self.agent.epsilon:.3f} buffer={len(self.buffer)}")
+                common.logger.info(
+                    f"Epoch {epoch}/{self.train_cfg.num_epoch} "
+                    f"tree={tree_cur} reward={epoch_reward:.4f} "
+                    f"eps={self.agent.epsilon:.3f} buffer={len(self.buffer)}")
 
     def _learn_qlearning(self):
         sa, r, nsa = self.buffer.sample()
@@ -211,3 +225,12 @@ class Trainer:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+    ######################################################
+    # New helper method (add after _learn_qlearning):
+    def _save_best(self, epoch, reward):
+        os.makedirs(self.save_dir, exist_ok=True)
+        path = os.path.join(self.save_dir, "model_best.pt")
+        self.agent.save_checkpoint(path)
+        common.logger.info(
+            f"  * New best reward={reward:.4f} at epoch {epoch}, saved to {path}")

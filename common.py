@@ -1,4 +1,9 @@
 from enum import Enum
+import os
+import sys
+import logging
+from datetime import datetime, timezone, timedelta
+
 
 DATA_PATH = 'data'
 CHECKPOINT_PATH = 'ckps'
@@ -52,3 +57,27 @@ FEAT_NAMES = [
     "longest_bl_b1",     # 17 — q-side longest BL
     "longest_bl_b2",     # 18 — qback-side longest BL
 ]
+
+LOG_PATH = 'logs'
+
+logger = logging.getLogger("phylo_rl")
+_stdout_handler = logging.StreamHandler(sys.stdout)
+_stdout_handler.setFormatter(logging.Formatter(
+    fmt="[%(asctime)s] [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+))
+logger.addHandler(_stdout_handler)
+logger.setLevel(logging.INFO)
+
+
+def setup_log_file(loss_type, obj_func, num_epoch, num_epoch_episode, n_steps):
+    os.makedirs(LOG_PATH, exist_ok=True)
+    now = datetime.now(timezone(timedelta(hours=7)))
+    ts = now.strftime("%y%m%d_%H%M%S")
+    fname = f"{ts}_{loss_type}_{obj_func}_ep{num_epoch}_epe{num_epoch_episode}_steps{n_steps}.log"
+    fh = logging.FileHandler(os.path.join(LOG_PATH, fname))
+    fh.setFormatter(logging.Formatter(
+        fmt="[%(asctime)s] [%(levelname)s] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    ))
+    logger.addHandler(fh)
