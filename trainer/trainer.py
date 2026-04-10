@@ -206,15 +206,15 @@ class Trainer:
                 cur_rewards = next_rewards
 
             self.env.tree_state[tree_cur] = cur_newick
+            self.scheduler.step()
             if epoch_reward > self.best_reward:
                 self.best_reward = epoch_reward
                 self._save_best(epoch, epoch_reward)
 
-            if epoch % 50 == 0:
-                common.logger.info(
-                    f"Epoch {epoch}/{self.train_cfg.num_epoch} "
-                    f"tree={tree_cur} reward={epoch_reward:.4f} "
-                    f"eps={self.agent.epsilon:.3f} buffer={len(self.buffer)}")
+            common.logger.info(
+                f"Epoch {epoch}/{self.train_cfg.num_epoch} "
+                f"tree={tree_cur} reward={epoch_reward:.4f} "
+                f"eps={self.agent.epsilon:.3f} buffer={len(self.buffer)}")
 
     def _learn_qlearning(self):
         sa, r, nsa = self.buffer.sample()
