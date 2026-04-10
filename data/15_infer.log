@@ -6,7 +6,7 @@ Olga Chernomor, Michael Woodhams, Diep Thi Hoang, Heiko Schmidt
 Host:    ha-ThinkPad-E14-Gen-5 (AVX2, FMA3, 31 GB RAM)
 Command: /home/ha/miniconda3/envs/thesis/bin/iqtree3 -s data/15.phy -m GTR+I+G --prefix data/15_infer -fast --seed 15
 Seed:    15 (Using SPRNG - Scalable Parallel Random Number Generator)
-Time:    Thu Apr  9 22:03:50 2026
+Time:    Fri Apr 10 19:46:24 2026
 Kernel:  AVX+FMA - 1 threads (16 CPU cores detected)
 
 HINT: Use -nt option to specify number of threads because your CPU has 16 cores!
@@ -14,43 +14,43 @@ HINT: -nt AUTO will automatically determine the best number of threads to use.
 
 Reading alignment file data/15.phy ... Phylip format detected
 Alignment most likely contains DNA/RNA sequences
-Constructing alignment: done in 0.000911981 secs using 42.65% CPU
-Alignment has 30 sequences with 500 columns, 498 distinct patterns
-476 parsimony-informative, 18 singleton sites, 6 constant sites
-Analyzing sequences: done in 9.3375e-05 secs using 98.53% CPU
-Checking for duplicate sequences: done in 0.000174111 secs using 99.36% CPU
+Constructing alignment: done in 0.000755777 secs using 22.1% CPU
+Alignment has 30 sequences with 500 columns, 494 distinct patterns
+466 parsimony-informative, 24 singleton sites, 10 constant sites
+Analyzing sequences: done in 7.3792e-05 secs using 36.59% CPU
+Checking for duplicate sequences: done in 0.00012199 secs using 36.89% CPU
 
-Create initial parsimony tree by phylogenetic likelihood library (PLL)... 0.01 seconds
+Create initial parsimony tree by phylogenetic likelihood library (PLL)... 0.00 seconds
 
 NOTE: 1 MB RAM (0 GB) is required!
 Estimate model parameters (epsilon = 0.50)
-1. Initial log-likelihood: -15346.46
-2. Current log-likelihood: -15155.83
-3. Current log-likelihood: -15142.56
-4. Current log-likelihood: -15141.73
-Optimal log-likelihood: -15141.55
-Rate parameters:  A-C: 0.88677  A-G: 0.91876  A-T: 0.87722  C-G: 1.05898  C-T: 0.99239  G-T: 1.00000
-Base frequencies:  A: 0.218  C: 0.273  G: 0.263  T: 0.246
-Proportion of invariable sites: 0.002
-Gamma shape alpha: 0.983
-Parameters optimization took 4 rounds (0.088 sec)
+1. Initial log-likelihood: -14384.10
+2. Current log-likelihood: -14206.89
+3. Current log-likelihood: -14200.85
+Optimal log-likelihood: -14200.45
+Rate parameters:  A-C: 1.14743  A-G: 1.06151  A-T: 0.89106  C-G: 1.19504  C-T: 1.17070  G-T: 1.00000
+Base frequencies:  A: 0.223  C: 0.279  G: 0.248  T: 0.251
+Proportion of invariable sites: 0.004
+Gamma shape alpha: 1.000
+Parameters optimization took 3 rounds (0.065 sec)
 Wrote distance file to... 
 Computing ML distances based on estimated model parameters...
-Calculating distance matrix: done in 0.00702795 secs using 99.8% CPU
-Computing ML distances took 0.007138 sec (of wall-clock time) 0.007124 sec (of CPU time)
-Setting up auxiliary I and S matrices: done in 0.000121886 secs using 432.4% CPU
-Constructing RapidNJ tree: done in 0.000248045 secs using 222.9% CPU
-Computing RapidNJ tree took 0.000470 sec (of wall-clock time) 0.001180 sec (of CPU time)
-Log-likelihood of RapidNJ tree: -15147.495
+Calculating distance matrix: done in 0.00412953 secs using 99.6% CPU
+Computing ML distances took 0.004217 sec (of wall-clock time) 0.004198 sec (of CPU time)
+WARNING: Some pairwise ML distances are too long (saturated)
+Setting up auxiliary I and S matrices: done in 3.6552e-05 secs using 98.49% CPU
+Constructing RapidNJ tree: done in 0.000113072 secs using 99.94% CPU
+Computing RapidNJ tree took 0.000183 sec (of wall-clock time) 0.000183 sec (of CPU time)
+Log-likelihood of RapidNJ tree: -14239.612
 --------------------------------------------------------------------
 |             INITIALIZING CANDIDATE TREE SET                      |
 --------------------------------------------------------------------
 
 Do NNI search on 2 best initial trees
-UPDATE BEST LOG-LIKELIHOOD: -15141.526
-UPDATE BEST LOG-LIKELIHOOD: -15141.525
-Finish initializing candidate tree set (2)
-Current best tree score: -15141.525 / CPU time: 0.096
+Estimate model parameters (epsilon = 0.500)
+BETTER TREE FOUND at iteration 1: -14174.745
+Finish initializing candidate tree set (3)
+Current best tree score: -14174.745 / CPU time: 0.083
 Number of iterations: 2
 TREE SEARCH COMPLETED AFTER 2 ITERATIONS / Time: 0h:0m:0s
 
@@ -59,21 +59,21 @@ TREE SEARCH COMPLETED AFTER 2 ITERATIONS / Time: 0h:0m:0s
 --------------------------------------------------------------------
 Performs final model parameters optimization
 Estimate model parameters (epsilon = 0.050)
-1. Initial log-likelihood: -15141.525
-Optimal log-likelihood: -15141.489
-Rate parameters:  A-C: 0.88437  A-G: 0.91605  A-T: 0.87617  C-G: 1.05842  C-T: 0.99269  G-T: 1.00000
-Base frequencies:  A: 0.218  C: 0.273  G: 0.263  T: 0.246
-Proportion of invariable sites: 0.002
-Gamma shape alpha: 0.974
-Parameters optimization took 1 rounds (0.011 sec)
-BEST SCORE FOUND : -15141.489
-Total tree length: 23.645
+1. Initial log-likelihood: -14174.745
+Optimal log-likelihood: -14174.718
+Rate parameters:  A-C: 1.15440  A-G: 1.04814  A-T: 0.90593  C-G: 1.19068  C-T: 1.17128  G-T: 1.00000
+Base frequencies:  A: 0.223  C: 0.279  G: 0.248  T: 0.251
+Proportion of invariable sites: 0.003
+Gamma shape alpha: 0.975
+Parameters optimization took 1 rounds (0.010 sec)
+BEST SCORE FOUND : -14174.718
+Total tree length: 19.856
 
 Total number of iterations: 2
-CPU time used for tree search: 0.092 sec (0h:0m:0s)
-Wall-clock time used for tree search: 0.096 sec (0h:0m:0s)
-Total CPU time used: 0.277 sec (0h:0m:0s)
-Total wall-clock time used: 0.282 sec (0h:0m:0s)
+CPU time used for tree search: 0.082 sec (0h:0m:0s)
+Wall-clock time used for tree search: 0.083 sec (0h:0m:0s)
+Total CPU time used: 0.194 sec (0h:0m:0s)
+Total wall-clock time used: 0.196 sec (0h:0m:0s)
 
 Analysis results written to: 
   IQ-TREE report:                data/15_infer.iqtree
@@ -81,4 +81,4 @@ Analysis results written to:
   Likelihood distances:          data/15_infer.mldist
   Screen log file:               data/15_infer.log
 
-Date and Time: Thu Apr  9 22:03:51 2026
+Date and Time: Fri Apr 10 19:46:24 2026

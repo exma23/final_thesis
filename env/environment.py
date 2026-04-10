@@ -7,6 +7,7 @@ import numpy as np
 class Environment:
     def __init__(self, tree_indices: List[int], data_dir: str = 'data', lib_path: str = 'feat_cpp/bridge.so'):
         self.tree_indices = tree_indices
+        self.data_dir = data_dir          # ← ADD THIS LINE
         self.cpp = FastCpp(lib_path)
         self.tree_start, self.tree_gt = load_data_indices(data_dir, tree_indices)
         self.tree_state = {}

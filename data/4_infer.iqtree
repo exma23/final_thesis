@@ -20,10 +20,10 @@ SEQUENCE ALIGNMENT
 
 NOTE: Alignment sequence type is auto-detected. If in doubt, specify it via -st option.
 Input data: 30 sequences with 500 nucleotide sites
-Number of constant sites: 6 (= 1.2% of all sites)
-Number of invariant (constant or ambiguous constant) sites: 6 (= 1.2% of all sites)
-Number of parsimony informative sites: 483
-Number of distinct site patterns: 497
+Number of constant sites: 9 (= 1.8% of all sites)
+Number of invariant (constant or ambiguous constant) sites: 9 (= 1.8% of all sites)
+Number of parsimony informative sites: 473
+Number of distinct site patterns: 495
 
 SUBSTITUTION PROCESS
 --------------------
@@ -32,123 +32,123 @@ Model of substitution: GTR+F+I+G4
 
 Rate parameter R:
 
-  A-C: 1.1404
-  A-G: 1.0910
-  A-T: 1.2281
-  C-G: 1.0009
-  C-T: 1.1945
+  A-C: 0.9928
+  A-G: 1.0356
+  A-T: 1.0621
+  C-G: 1.1683
+  C-T: 1.0404
   G-T: 1.0000
 
 State frequencies: (empirical counts from alignment)
 
-  pi(A) = 0.2595
-  pi(C) = 0.2133
-  pi(G) = 0.2057
-  pi(T) = 0.3215
+  pi(A) = 0.2649
+  pi(C) = 0.2204
+  pi(G) = 0.1975
+  pi(T) = 0.3172
 
 Rate matrix Q:
 
-  A    -1.037    0.2925    0.2699    0.4749
-  C    0.3558    -1.065    0.2476    0.4619
-  G    0.3404    0.2567   -0.9838    0.3867
-  T    0.3832    0.3063    0.2474    -0.937
+  A   -0.9806    0.2823    0.2638    0.4346
+  C    0.3393    -1.063    0.2976    0.4257
+  G    0.3539    0.3321    -1.095    0.4092
+  T     0.363    0.2958    0.2547   -0.9135
 
 Model of rate heterogeneity: Invar+Gamma with 4 categories
-Proportion of invariable sites: 0.004595
-Gamma shape alpha: 1.036
+Proportion of invariable sites: 0.00243
+Gamma shape alpha: 1.021
 
  Category  Relative_rate  Proportion
-  0         0              0.004595
-  1         0.1447         0.2489
-  2         0.4895         0.2489
-  3         1.01           0.2489
-  4         2.374          0.2489
+  0         0              0.00243
+  1         0.1415         0.2494
+  2         0.4842         0.2494
+  3         1.006          0.2494
+  4         2.378          0.2494
 Relative rates are computed as MEAN of the portion of the Gamma distribution falling in the category.
 
 MAXIMUM LIKELIHOOD TREE
 -----------------------
 
-Log-likelihood of the tree: -15271.7550 (s.e. 222.1665)
-Unconstrained log-likelihood (without tree): -3102.6219
+Log-likelihood of the tree: -14307.1596 (s.e. 234.8113)
+Unconstrained log-likelihood (without tree): -3099.8493
 Number of free parameters (#branches + #model parameters): 67
-Akaike information criterion (AIC) score: 30677.5099
-Corrected Akaike information criterion (AICc) score: 30698.6025
-Bayesian information criterion (BIC) score: 30959.8887
+Akaike information criterion (AIC) score: 28748.3191
+Corrected Akaike information criterion (AICc) score: 28769.4117
+Bayesian information criterion (BIC) score: 29030.6979
 
-Total tree length (sum of branch lengths): 24.9520
-Sum of internal branch lengths: 12.3297 (49.4135% of tree length)
+Total tree length (sum of branch lengths): 18.6206
+Sum of internal branch lengths: 11.2693 (60.5205% of tree length)
 
 NOTE: Tree is UNROOTED although outgroup taxon 't1' is drawn at root
 
 +---t1
 |
-|               +-------t3
-|            +--|
-|            |  +--t23
-|  +---------|
-|  |         +-----t13
-+--|
-|  |                                                 +------t2
-|  |                              +------------------|
-|  |                              |                  +-----t15
-|  |                       +------|
-|  |                       |      |   +--t4
-|  |                       |      +---|
-|  |                       |          +----t20
-|  |          +------------|
-|  |          |            +-----------t14
-|  |       +--|
-|  |       |  |                 +--t12
-|  |       |  |              +--|
-|  |       |  |              |  |  +-----t19
-|  |       |  |              |  +--|
-|  |       |  |              |     +--t24
-|  |       |  +--------------|
-|  |       |                 |   +--t16
-|  |       |                 +---|
-|  |       |                     +--t30
-|  +-------|
-|          |            +--t6
-|          |         +--|
-|          |         |  +--t28
-|          |      +--|
-|          |      |  +**t29
-|          |  +---|
-|          |  |   +--------------------------t17
-|          +--|
-|             +--t11
++--t3
 |
-|                     +---------t5
-|              +------|
-|              |      +--t22
-|           +--|
-|           |  +---------t18
-|     +-----|
-|     |     +------t27
+|           +--t2
+|        +--|
+|        |  |  +--t7
+|        |  +--|
+|        |     +--t20
+|     +--|
+|     |  +--t23
 |  +--|
-|  |  +--t10
+|  |  |                       +----------t10
+|  |  |                    +--|
+|  |  |                    |  +--t22
+|  |  +--------------------|
+|  |                       |     +--t14
+|  |                       +-----|
+|  |                             +--------t26
 +--|
-   |               +----t7
-   |            +--|
-   |            |  +--t25
-   |       +----|
-   |       |    |  +-----t8
-   |       |    +--|
-   |       |       +--t9
-   |    +--|
-   |    |  +---t26
-   +----|
-        +**t21
+   |                                             +-----t12
+   |                                        +----|
+   |                                        |    +--t28
+   |                 +----------------------|
+   |                 |                      +-----t19
+   |  +--------------|
+   |  |              +--t18
+   +--|
+      |        +--t11
+      |     +--|
+      |     |  +--t24
+      +-----|
+            |  +------t21
+            +--|
+               |                                               +--t4
+               |                                     +---------|
+               |                                     |         +--t16
+               |                                  +--|
+               |                                  |  |   +--t6
+               |                                  |  +---|
+               |                                  |      +--t15
+               |                   +--------------|
+               |                   |              +------t13
+               |                +--|
+               |                |  +-----t8
+               |   +------------|
+               |   |            |  +---t27
+               |   |            +--|
+               |   |               |         +--t29
+               |   |               +---------|
+               |   |                         +-------t30
+               +---|
+                   |              +**t25
+                   +--------------|
+                                  |     +-----t5
+                                  |  +--|
+                                  |  |  +--t17
+                                  +--|
+                                     +--t9
 
 Tree in newick format:
 
-(t1:0.3465170346,(((t3:0.7290702445,t23:0.1055450741):0.0502828934,t13:0.5176650289):0.8440270155,(((((t2:0.6058250306,t15:0.5267107699):1.6518040647,(t4:0.1970819572,t20:0.4533978635):0.3958803951):0.6271709472,t14:1.0509499431):1.1006366348,((t12:0.0022535592,(t19:0.5255686272,t24:0.1488382974):0.0600127063):0.1769916352,(t16:0.0074511072,t30:0.0824060010):0.4074567799):1.3200337931):0.1690011661,((((t6:0.1389998940,t28:0.1313356359):0.3125731684,t29:0.0000024734):0.0871135085,t17:2.2859314385):0.3419880907,t11:0.3172255720):0.3247861080):0.7165194548):0.1047130442,(((((t5:0.8635070277,t22:0.1504209808):0.6598899222,t18:0.8357107562):0.3134060822,t27:0.6389975003):0.5124611627,t10:0.2236770283):0.3240982099,((((t7:0.4865005821,t25:0.3033107254):0.2636875034,(t8:0.5731124772,t9:0.0059045159):0.2133024594):0.4802388756,t26:0.3684374895):0.0800609749,t21:0.0000026696):0.4881822719):0.3033661054);
+(t1:0.2645183418,t3:0.1096540526,((((t2:0.1439699240,(t7:0.0256132330,t20:0.0742147096):0.0354245354):0.1262807115,t23:0.2179168880):0.0513195968,((t10:0.7260663623,t22:0.0497965917):0.1178061219,(t14:0.0299076920,t26:0.6292392314):0.4337514304):1.3797815025):0.0531579871,((((t12:0.3901287920,t28:0.0731022025):0.3240534678,t19:0.4151355499):1.5137762402,t18:0.0384076867):1.0026489449,((t11:0.1768431257,t24:0.2362551285):0.0941502712,(t21:0.5135480051,((((((t4:0.1800589904,t16:0.2013152150):0.6724480674,(t6:0.2023716942,t15:0.0342465826):0.3026789015):0.1253598192,t13:0.4596328233):1.0264494669,t8:0.4159782771):0.0568274590,(t27:0.2688197527,(t29:0.0657804469,t30:0.5257355280):0.6947729475):0.1466260653):0.8421621604,(t25:0.0000026229,((t5:0.4284316257,t17:0.2069900174):0.1646512688,t9:0.2476393562):0.1529317853):0.9900426293):0.2713034736):0.1478690449):0.4131004463):0.0726948896):0.0572312455);
 
 ALISIM COMMAND
 --------------
 To simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis, you can use the following command:
 
---alisim simulated_MSA -t data/4_infer.treefile -m "GTR{1.14041,1.09098,1.22814,1.00085,1.19448}+F{0.259467,0.213267,0.205733,0.321533}+I{0.00459542}+G4{1.03589}" --length 500
+--alisim simulated_MSA -t data/4_infer.treefile -m "GTR{0.992832,1.03558,1.06208,1.16829,1.04041}+F{0.264933,0.2204,0.197467,0.3172}+I{0.00242964}+G4{1.02117}" --length 500
 
 To mimic the alignment used to produce this analysis, i.e. simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis *and* copying the same gap positions as the original alignment, you can use the following command:
 
@@ -163,7 +163,7 @@ For more information on using AliSim, please visit: www.iqtree.org/doc/AliSim
 TIME STAMP
 ----------
 
-Date and time: Thu Apr  9 22:03:47 2026
-Total CPU time used: 0.455291 seconds (0h:0m:0s)
-Total wall-clock time used: 0.460419 seconds (0h:0m:0s)
+Date and time: Fri Apr 10 19:46:20 2026
+Total CPU time used: 0.384477 seconds (0h:0m:0s)
+Total wall-clock time used: 0.39601 seconds (0h:0m:0s)
 

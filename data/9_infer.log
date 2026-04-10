@@ -6,7 +6,7 @@ Olga Chernomor, Michael Woodhams, Diep Thi Hoang, Heiko Schmidt
 Host:    ha-ThinkPad-E14-Gen-5 (AVX2, FMA3, 31 GB RAM)
 Command: /home/ha/miniconda3/envs/thesis/bin/iqtree3 -s data/9.phy -m GTR+I+G --prefix data/9_infer -fast --seed 9
 Seed:    9 (Using SPRNG - Scalable Parallel Random Number Generator)
-Time:    Thu Apr  9 22:03:49 2026
+Time:    Fri Apr 10 19:46:21 2026
 Kernel:  AVX+FMA - 1 threads (16 CPU cores detected)
 
 HINT: Use -nt option to specify number of threads because your CPU has 16 cores!
@@ -14,42 +14,44 @@ HINT: -nt AUTO will automatically determine the best number of threads to use.
 
 Reading alignment file data/9.phy ... Phylip format detected
 Alignment most likely contains DNA/RNA sequences
-Constructing alignment: done in 0.000410854 secs using 20.93% CPU
-Alignment has 30 sequences with 500 columns, 493 distinct patterns
-463 parsimony-informative, 28 singleton sites, 9 constant sites
-Analyzing sequences: done in 3.4763e-05 secs
-Checking for duplicate sequences: done in 7.4562e-05 secs
+Constructing alignment: done in 0.000727812 secs using 46.58% CPU
+Alignment has 30 sequences with 500 columns, 498 distinct patterns
+476 parsimony-informative, 19 singleton sites, 5 constant sites
+Analyzing sequences: done in 6.7331e-05 secs using 98.02% CPU
+Checking for duplicate sequences: done in 0.000108794 secs using 99.27% CPU
 
 Create initial parsimony tree by phylogenetic likelihood library (PLL)... 0.00 seconds
 
 NOTE: 1 MB RAM (0 GB) is required!
 Estimate model parameters (epsilon = 0.50)
-1. Initial log-likelihood: -13686.01
-2. Current log-likelihood: -13466.47
-3. Current log-likelihood: -13455.62
-Optimal log-likelihood: -13455.07
-Rate parameters:  A-C: 0.98198  A-G: 1.10631  A-T: 0.84159  C-G: 1.08867  C-T: 0.98738  G-T: 1.00000
-Base frequencies:  A: 0.264  C: 0.271  G: 0.217  T: 0.248
-Proportion of invariable sites: 0.003
-Gamma shape alpha: 1.151
-Parameters optimization took 3 rounds (0.062 sec)
+1. Initial log-likelihood: -15488.26
+2. Current log-likelihood: -15292.33
+3. Current log-likelihood: -15279.81
+4. Current log-likelihood: -15278.84
+Optimal log-likelihood: -15278.59
+Rate parameters:  A-C: 1.00049  A-G: 1.07743  A-T: 1.03553  C-G: 1.06419  C-T: 0.99533  G-T: 1.00000
+Base frequencies:  A: 0.265  C: 0.277  G: 0.222  T: 0.236
+Proportion of invariable sites: 0.001
+Gamma shape alpha: 0.995
+Parameters optimization took 4 rounds (0.246 sec)
 Wrote distance file to... 
 Computing ML distances based on estimated model parameters...
-Calculating distance matrix: done in 0.00402104 secs using 99.97% CPU
-Computing ML distances took 0.004148 sec (of wall-clock time) 0.004123 sec (of CPU time)
-Setting up auxiliary I and S matrices: done in 6.6897e-05 secs using 98.66% CPU
-Constructing RapidNJ tree: done in 0.000151206 secs using 294.3% CPU
-Computing RapidNJ tree took 0.000263 sec (of wall-clock time) 0.000556 sec (of CPU time)
-Log-likelihood of RapidNJ tree: -13455.517
+Calculating distance matrix: done in 0.0112625 secs using 100% CPU
+Computing ML distances took 0.011463 sec (of wall-clock time) 0.011469 sec (of CPU time)
+WARNING: Some pairwise ML distances are too long (saturated)
+Setting up auxiliary I and S matrices: done in 7.793e-05 secs using 100.1% CPU
+Constructing RapidNJ tree: done in 0.00020349 secs using 99.76% CPU
+Computing RapidNJ tree took 0.000335 sec (of wall-clock time) 0.000334 sec (of CPU time)
+Log-likelihood of RapidNJ tree: -15253.008
 --------------------------------------------------------------------
 |             INITIALIZING CANDIDATE TREE SET                      |
 --------------------------------------------------------------------
 
 Do NNI search on 2 best initial trees
 Estimate model parameters (epsilon = 0.500)
-BETTER TREE FOUND at iteration 1: -13439.567
+BETTER TREE FOUND at iteration 1: -15225.682
 Finish initializing candidate tree set (4)
-Current best tree score: -13439.567 / CPU time: 0.120
+Current best tree score: -15225.682 / CPU time: 0.103
 Number of iterations: 2
 TREE SEARCH COMPLETED AFTER 2 ITERATIONS / Time: 0h:0m:0s
 
@@ -58,22 +60,22 @@ TREE SEARCH COMPLETED AFTER 2 ITERATIONS / Time: 0h:0m:0s
 --------------------------------------------------------------------
 Performs final model parameters optimization
 Estimate model parameters (epsilon = 0.050)
-1. Initial log-likelihood: -13439.567
-2. Current log-likelihood: -13439.513
-Optimal log-likelihood: -13439.476
-Rate parameters:  A-C: 0.98492  A-G: 1.11485  A-T: 0.83961  C-G: 1.09447  C-T: 0.98197  G-T: 1.00000
-Base frequencies:  A: 0.264  C: 0.271  G: 0.217  T: 0.248
+1. Initial log-likelihood: -15225.682
+2. Current log-likelihood: -15225.618
+Optimal log-likelihood: -15225.581
+Rate parameters:  A-C: 0.98634  A-G: 1.04842  A-T: 0.99736  C-G: 1.04812  C-T: 0.97273  G-T: 1.00000
+Base frequencies:  A: 0.265  C: 0.277  G: 0.222  T: 0.236
 Proportion of invariable sites: 0.001
-Gamma shape alpha: 1.134
-Parameters optimization took 2 rounds (0.022 sec)
-BEST SCORE FOUND : -13439.476
-Total tree length: 15.825
+Gamma shape alpha: 0.987
+Parameters optimization took 2 rounds (0.017 sec)
+BEST SCORE FOUND : -15225.581
+Total tree length: 24.162
 
 Total number of iterations: 2
-CPU time used for tree search: 0.119 sec (0h:0m:0s)
-Wall-clock time used for tree search: 0.120 sec (0h:0m:0s)
-Total CPU time used: 0.288 sec (0h:0m:0s)
-Total wall-clock time used: 0.294 sec (0h:0m:0s)
+CPU time used for tree search: 0.099 sec (0h:0m:0s)
+Wall-clock time used for tree search: 0.103 sec (0h:0m:0s)
+Total CPU time used: 0.410 sec (0h:0m:0s)
+Total wall-clock time used: 0.422 sec (0h:0m:0s)
 
 Analysis results written to: 
   IQ-TREE report:                data/9_infer.iqtree
@@ -81,4 +83,4 @@ Analysis results written to:
   Likelihood distances:          data/9_infer.mldist
   Screen log file:               data/9_infer.log
 
-Date and Time: Thu Apr  9 22:03:49 2026
+Date and Time: Fri Apr 10 19:46:22 2026

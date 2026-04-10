@@ -1,0 +1,76 @@
+# config.yaml — All parameters for data generation (C++) and training (Python)
+
+# ═══════════════════════════════════════════════════════════════
+#  Data generation  (feat_cpp/generate.cpp)
+# ═══════════════════════════════════════════════════════════════
+generate:
+  n_taxa: 30
+  seq_length: 500
+  n_trees: 20
+  seed: 42
+  out_dir: "data"
+  subst_model: "GTR+I+G"
+  branch_length_lambda: 3.0
+  iqtree_bin: "iqtree3"
+  raxmlng_bin: "raxml-ng"
+
+# ═══════════════════════════════════════════════════════════════
+#  Paths
+# ═══════════════════════════════════════════════════════════════
+paths:
+  data_dir: "data"
+  checkpoint_dir: "ckps"
+  bridge_lib: "feat_cpp/bridge.so"
+
+# ═══════════════════════════════════════════════════════════════
+#  Training  (→ TrainConfig)
+# ═══════════════════════════════════════════════════════════════
+training:
+  num_epoch: 500
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-4
+  num_epoch_episode: 10
+  device: "auto"                    # "auto" | "cuda" | "cpu"
+  # Network
+  in_features: 19
+  out_features: 1
+  layers: [128, 128, 128, 128]
+
+# ═══════════════════════════════════════════════════════════════
+#  RL  (→ RLConfig)
+# ═══════════════════════════════════════════════════════════════
+rl:
+  loss_type: "reinforce"            # "reinforce" | "q_learning"
+  n_steps: 30
+  gamma: 0.9
+  # REINFORCE
+  pg_episodes_in_memory: 2
+  pg_epochs: 10
+  pg_batch_size: 64
+  # Q-learning
+  buffer_size: 10000
+  batch_size: 32
+  target_update_freq: 100
+  tau: 0.005
+  # Epsilon schedule (eps_greedy)
+  epsilon_start: 1.0
+  epsilon_end: 0.05
+  epsilon_decay_steps: 5000
+
+# ═══════════════════════════════════════════════════════════════
+#  Agent
+# ═══════════════════════════════════════════════════════════════
+agent:
+  strategy_train: "softmax"         # "greedy" | "softmax" | "eps_greedy"
+  strategy_infer: "greedy"
+
+# ═══════════════════════════════════════════════════════════════
+#  Phylogenetics  (→ PhyloConfig)
+# ═══════════════════════════════════════════════════════════════
+phylo:
+  move_type: "spr"
+  obj_func: "likelihood"            # "robinson_foulds" | "likelihood" | "parsimony"
+  spr_radius: 7
+  optimize_bl: true
+  bl_opt_every: 5
+  bl_opt_model: "GTR+G"

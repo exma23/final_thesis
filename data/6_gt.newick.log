@@ -1,0 +1,65 @@
+IQ-TREE version 3.1.1 for Linux x86 64-bit built Apr  8 2026
+Developed by Bui Quang Minh, Thomas Wong, Nhan Ly-Trong, Huaiyan Ren
+Contributed by Lam-Tung Nguyen, Dominik Schrempf, Chris Bielow,
+Olga Chernomor, Michael Woodhams, Diep Thi Hoang, Heiko Schmidt
+
+Host:    ha-ThinkPad-E14-Gen-5 (AVX2, FMA3, 31 GB RAM)
+Command: iqtree3 --alisim data/6 -t data/6_gt.newick -m GTR+I+G --length 500 --seed 6
+Seed:    6 (Using SPRNG - Scalable Parallel Random Number Generator)
+Time:    Fri Apr 10 19:55:28 2026
+Kernel:  AVX+FMA - 1 threads (16 CPU cores detected)
+
+[Alignment Simulator] Executing
+WARNING: Without Inference Mode, we strongly recommend users to specify model parameters for more accuracy simulations. Users could use <Model_Name>{<param_0>/.../<param_n>} to specify the model parameters. For the model GTR, users should provide 5 params (see User Manuals).
+WARNING: GTR must have unequal base frequencies. The base frequencies could be randomly generated if users do not provide them. However, we strongly recommend users specify the base frequencies by using +F{freq1/.../freqN} for better simulation accuracy.
+ - Tree filepath: data/6_gt.newick
+ - Length of output sequences: 500
+ - Model: GTR+I+G
+ - Number of output datasets: 1
+ - Number of threads: 1
+SUBSTITUTION PROCESS
+--------------------
+
+Model of substitution: GTR+F+I+G4
+
+Rate parameter R:
+
+  A-C: 1.000
+  A-G: 1.000
+  A-T: 1.000
+  C-G: 1.000
+  C-T: 1.000
+  G-T: 1.000
+
+State frequencies: (empirical counts from alignment)
+
+  pi(A) = 0.266
+  pi(C) = 0.384
+  pi(G) = 0.148
+  pi(T) = 0.202
+
+Rate matrix Q:
+
+  A     -1.02     0.535     0.206     0.281
+  C      0.37    -0.856     0.206     0.281
+  G      0.37     0.535     -1.19     0.281
+  T      0.37     0.535     0.206     -1.11
+
+Model of rate heterogeneity: Invar+Gamma with 4 categories
+Proportion of invariable sites: 0
+Gamma shape alpha: 1
+
+ Category  Relative_rate  Proportion
+  1         0.137          0.25
+  2         0.477          0.25
+  3         1              0.25
+  4         2.39           0.25
+Relative rates are computed as MEAN of the portion of the Gamma distribution falling in the category.
+
+An alignment written to data/6.phy
+Screen log file: data/6_gt.newick.log
+[Alignment Simulator] Done
+Simulation CPU time: 0.022 sec (0h:0m:0s)
+Simulation wall-clock time: 0.023 sec (0h:0m:0s)
+
+Date and Time: Fri Apr 10 19:55:28 2026

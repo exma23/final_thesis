@@ -1,0 +1,86 @@
+
+RAxML-NG v. 1.2.2 released on 11.04.2024 by The Exelixis Lab.
+Developed by: Alexey M. Kozlov and Alexandros Stamatakis.
+Contributors: Diego Darriba, Tomas Flouri, Benoit Morel, Sarah Lutteropp, Ben Bettisworth, Julia Haag, Anastasis Togkousidis.
+Latest version: https://github.com/amkozlov/raxml-ng
+Questions/problems/suggestions? Please visit: https://groups.google.com/forum/#!forum/raxml
+
+System: 13th Gen Intel(R) Core(TM) i5-13500H, 12 cores, 31 GB RAM (allocated: 8 physical cores)
+
+RAxML-NG was called at 10-Apr-2026 19:55:26 as follows:
+
+raxml-ng --evaluate --msa data/1.phy --tree data/1_tmp.tre --model GTR+I+G --prefix data/1_opt --threads 1 --force perf_threads
+
+Analysis options:
+  run mode: Evaluate tree likelihood
+  start tree(s): user
+  random seed: 1775825726
+  tip-inner: OFF
+  pattern compression: ON
+  per-rate scalers: OFF
+  site repeats: ON
+  logLH epsilon: general: 0.100000, brlen-triplet: 1000.000000
+  branch lengths: proportional (ML estimate, algorithm: NR-FAST)
+  SIMD kernels: AVX2
+  parallelization: coarse-grained (auto), NONE/sequential
+
+WARNING: Running in FORCE mode: some safety checks are disabled!
+
+[00:00:00] Reading alignment from file: data/1.phy
+[00:00:00] Loaded alignment with 30 taxa and 500 sites
+
+Alignment comprises 1 partitions and 497 patterns
+
+Partition 0: noname
+Model: GTR+FO+I+G4m
+Alignment sites / patterns: 500 / 497
+Gaps: 0.00 %
+Invariant sites: 1.20 %
+
+
+NOTE: Binary MSA file created: data/1_opt.raxml.rba
+
+Parallelization scheme autoconfig: 1 worker(s) x 1 thread(s)
+
+[00:00:00] Loading user starting tree(s) from: data/1_tmp.tre
+Parallel reduction/worker buffer size: 1 KB  / 0 KB
+
+[00:00:00] Data distribution: max. partitions/sites/weight per thread: 1 / 497 / 7952
+[00:00:00] Data distribution: max. searches per worker: 1
+
+Evaluating 1 trees
+
+[00:00:00] Tree #1, initial LogLikelihood: -19742.714469
+
+[00:00:00 -19742.714469] Initial branch length optimization
+[00:00:00 -17251.133392] Model parameter optimization (eps = 0.100000)
+
+[00:00:00] Tree #1, final logLikelihood: -17013.801658
+
+
+Optimized model parameters:
+
+   Partition 0: noname
+   Rate heterogeneity: GAMMA (4 cats, mean),  alpha: 0.740478 (ML),  weights&rates: (0.250000,0.082847) (0.250000,0.382019) (0.250000,0.938992) (0.250000,2.596142) 
+   P-inv (ML): 0.009505
+   Base frequencies (ML): 0.353771 0.216068 0.214723 0.215439 
+   Substitution rates (ML): 1.137902 1.019835 1.074959 0.989079 1.093268 1.000000 
+
+
+Final LogLikelihood: -17013.801658
+
+AIC score: 34161.603316 / AICc score: 34182.695909 / BIC score: 34443.982059
+Free parameters (model + branch lengths): 67
+
+WARNING: Best ML tree contains 20 near-zero branches!
+
+Best ML tree with collapsed near-zero branches saved to: /home/ha/Code/final_thesis/data/1_opt.raxml.bestTreeCollapsed
+Best ML tree saved to: /home/ha/Code/final_thesis/data/1_opt.raxml.bestTree
+Optimized model saved to: /home/ha/Code/final_thesis/data/1_opt.raxml.bestModel
+
+Execution log saved to: /home/ha/Code/final_thesis/data/1_opt.raxml.log
+
+Analysis started: 10-Apr-2026 19:55:26 / finished: 10-Apr-2026 19:55:26
+
+Elapsed time: 0.275 seconds
+
