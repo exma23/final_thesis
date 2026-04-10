@@ -11,13 +11,14 @@ import utils
 
 
 class Trainer:
-    def __init__(self, config: Config, env: Environment, agent: Agent, save_dir: str = common.CHECKPOINT_PATH):
+    def __init__(self, config, env, agent, save_dir=common.CHECKPOINT_PATH, model_tag=""):
         self.rl_cfg = config.rl_cfg
         self.train_cfg = config.train_cfg
         self.phylo_cfg = config.phylo_cfg
         self.env = env
         self.agent = agent
         self.save_dir = save_dir
+        self.model_tag = model_tag
         self.best_reward = float('-inf')
 
         self.optimizer = torch.optim.AdamW(
@@ -230,7 +231,7 @@ class Trainer:
     # New helper method (add after _learn_qlearning):
     def _save_best(self, epoch, reward):
         os.makedirs(self.save_dir, exist_ok=True)
-        path = os.path.join(self.save_dir, "model_best.pt")
+        path = os.path.join(self.save_dir, f"model_best_{self.model_tag}.pt")
         self.agent.save_checkpoint(path)
         common.logger.info(
             f"  * New best reward={reward:.4f} at epoch {epoch}, saved to {path}")

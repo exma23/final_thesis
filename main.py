@@ -103,6 +103,18 @@ def run(args):
     ckp_dir = args.checkpoint_dir or paths.get("checkpoint_dir", common.CHECKPOINT_PATH)
     bridge_lib = paths.get("bridge_lib", "feat_cpp/bridge.so")
 
+    from datetime import datetime, timezone, timedelta
+    ts = datetime.now(timezone(timedelta(hours=7))).strftime("%y%m%d_%H%M%S")
+    run_dir = os.path.join(ckp_dir, ts)
+    os.makedirs(run_dir, exist_ok=True)
+
+    model_tag = (
+        f"{rl_cfg.loss_type}_{phylo_cfg.obj_func}"
+        f"_ep{train_cfg.num_epoch}"
+        f"_epe{train_cfg.num_epoch_episode}"
+        f"_steps{rl_cfg.n_steps}"
+    )
+
     # 3. Auto strategy: softmax for REINFORCE, eps_greedy for Q-learning
     if args.strategy_train is None and args.loss_type is not None:
         agent_cfg["strategy_train"] = (
@@ -152,7 +164,8 @@ def run(args):
     )
 
     # 6. Train
-    trainer = Trainer(config=config, env=env, agent=agent, save_dir=ckp_dir)
+    trainer = Trainer(config=config, env=env, agent=agent,
+                      save_dir=run_dir, model_tag=model_tag)
     trainer.train()
 
     # 7. Save: model_{loss_type}_{obj_func}.pt
@@ -163,7 +176,7 @@ def run(args):
         f"_epe{train_cfg.num_epoch_episode}"
         f"_steps{rl_cfg.n_steps}.pt"
     )
-    save_path = os.path.join(ckp_dir, model_name)
+    save_path = os.path.join(run_dir, f"model_{model_tag}.pt")
     agent.save_checkpoint(save_path)
     log.info(f"Model saved to {save_path}")
 
