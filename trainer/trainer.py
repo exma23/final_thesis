@@ -54,15 +54,15 @@ class Trainer:
             rewards = [t['reward'] for t in transitions]
             returns = self._compute_returns(rewards, self.rl_cfg.gamma)
 
-            for _ in range(self.train_cfg.num_epoch_episode):
+            for epoch_episode in range(self.train_cfg.num_epoch_episode):
+                print(f'epoch_episode {epoch_episode}')
                 self._update_reinforce(transitions, returns)
 
             self.scheduler.step()  # ← ADD
 
-            if epoch % 50 == 0:
-                obj = self.phylo_cfg.obj_func
-                print(f"Epoch {epoch}/{self.train_cfg.num_epoch} "
-                      f"tree={tree_cur} reward={sum(rewards):.4f} obj={obj}")
+            obj = self.phylo_cfg.obj_func
+            print(f"Epoch {epoch}/{self.train_cfg.num_epoch} "
+                    f"tree={tree_cur} reward={sum(rewards):.4f} obj={obj}")
 
     def _rollout(self, tree_idx):
         cur_newick = self.env.tree_state[tree_idx]
@@ -84,6 +84,7 @@ class Trainer:
                 spr_radius=self.phylo_cfg.spr_radius)
 
         for step in range(self.rl_cfg.n_steps):
+            print(step)
             X = torch.tensor(feats, dtype=torch.float32,
                              device=self.train_cfg.device)
             X = utils.normalize_features(X)
