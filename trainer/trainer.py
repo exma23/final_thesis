@@ -55,7 +55,6 @@ class Trainer:
             returns = self._compute_returns(rewards, self.rl_cfg.gamma)
 
             for epoch_episode in range(self.train_cfg.num_epoch_episode):
-                print(f'epoch_episode {epoch_episode}')
                 self._update_reinforce(transitions, returns)
 
             self.scheduler.step()  # ← ADD
@@ -84,7 +83,6 @@ class Trainer:
                 spr_radius=self.phylo_cfg.spr_radius)
 
         for step in range(self.rl_cfg.n_steps):
-            print(step)
             X = torch.tensor(feats, dtype=torch.float32,
                              device=self.train_cfg.device)
             X = utils.normalize_features(X)
