@@ -21,6 +21,7 @@ static std::string slurp(const std::string &p) {
     s.pop_back();
   return s;
 }
+
 static void spit(const std::string &p, const std::string &s) {
   std::ofstream(p) << s;
 }
@@ -61,7 +62,6 @@ static std::string unroot(const std::string &nwk) {
   return out;
 }
 
-// Rooted random tree, BL ~ Exp(3)
 static std::string rand_tree(int n, std::mt19937 &rng) {
   std::exponential_distribution<> bl(3.0);
   std::vector<std::string> v;
@@ -75,7 +75,8 @@ static std::string rand_tree(int n, std::mt19937 &rng) {
     if (a > b)
       std::swap(a, b);
     std::ostringstream os;
-    os << "(" << v[a] << ":" << bl(rng) << "," << v[b] << ":" << bl(rng) << ")";
+    os << "(" << v[a] << ":" << bl(rng) << "," << v[b] << ":" << bl(rng)
+       << ")";
     v.erase(v.begin() + b);
     v[a] = os.str();
   }
@@ -87,6 +88,7 @@ int main(int argc, char **argv) {
   unsigned seed = time(nullptr);
   std::string outdir = "data", iqtree = "iqtree3", model = "GTR+I+G",
               raxmlng = "raxml-ng";
+
   for (int i = 1; i < argc; i++) {
     std::string a = argv[i];
     if (a == "--taxa" && i + 1 < argc)
@@ -111,20 +113,24 @@ int main(int argc, char **argv) {
   std::mt19937 rng(seed);
 
   for (int i = 0; i < num; i++) {
-    std::string b = outdir + "/" + std::to_string(i);
-    std::cout << "[" << i + 1 << "/" << num << "] " << b << "\n";
+    // data/<i>/  — one folder per tree
+    std::string d = outdir + "/" + std::to_string(i);
+    system(("mkdir -p " + d).c_str());
+    std::cout << "[" << i + 1 << "/" << num << "] " << d << "\n";
 
-    // 1. GT: random rooted → unroot (ternary root for PLL)
+    // 1. GT tree: random rooted → unroot
     std::string gt = unroot(rand_tree(taxa, rng));
     if (gt.empty()) {
       std::cerr << "  unroot failed\n";
       continue;
     }
-    spit(b + "_gt.newick", gt);
+    spit(d + "/gt.newick", gt);
 
     // 2. MSA via iqtree3 --alisim
-    std::string cmd = iqtree + " --alisim " + b + " -t " + b +
-                      "_gt.newick -m " + model + " --length " +
+    //    alisim writes <prefix>.phy, so prefix = d + "/data"
+    std::string prefix = d + "/data";
+    std::string cmd = iqtree + " --alisim " + prefix + " -t " + d +
+                      "/gt.newick -m " + model + " --length " +
                       std::to_string(len) + " --seed " + std::to_string(i) +
                       " 2>&1";
     if (system(cmd.c_str())) {
@@ -132,21 +138,24 @@ int main(int argc, char **argv) {
       continue;
     }
 
-    // 3. Start: different random topo → unroot → iqtree3 -te optimize BL
-    spit(b + "_tmp.tre", unroot(rand_tree(taxa, rng)));
-    cmd = raxmlng + " --evaluate --msa " + b + ".phy --tree " + b +
-          "_tmp.tre --model " + model + " --prefix " + b +
-          "_opt --threads 1 --force perf_threads 2>&1";
+    // 3. Start tree: different random topo → optimize BL with raxml-ng
+    std::string tmp_tree = d + "/tmp.tre";
+    std::string opt_prefix = d + "/opt";
+    spit(tmp_tree, unroot(rand_tree(taxa, rng)));
+    cmd = raxmlng + " --evaluate --msa " + prefix + ".phy --tree " +
+          tmp_tree + " --model " + model + " --prefix " + opt_prefix +
+          " --threads 1 --force perf_threads 2>&1";
     if (system(cmd.c_str())) {
       std::cerr << "  BL opt failed\n";
       continue;
     }
-    spit(b + "_start.newick", slurp(b + "_opt.raxml.bestTree"));
+    spit(d + "/start.newick", slurp(opt_prefix + ".raxml.bestTree"));
 
-    // cleanup
-    for (auto &e : {"_tmp.tre", "_opt.treefile", "_opt.iqtree", "_opt.log",
-                    "_opt.model.gz", "_opt.ckp.gz", ".log"})
-      remove((b + e).c_str());
+    // 4. Cleanup temp files
+    for (auto &e :
+         {"/tmp.tre", "/opt.raxml.bestTree", "/opt.raxml.bestModel",
+          "/opt.raxml.log", "/opt.raxml.startTree", "/data.log"})
+      remove((d + e).c_str());
   }
   std::cout << "done\n";
 }

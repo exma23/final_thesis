@@ -36,6 +36,8 @@ class RLConfig:
     epsilon_start: float = 1.0
     epsilon_end: float = 0.05
     epsilon_decay_steps: int = 5000
+    reward_type: str = "raw"          # "raw" | "normalized" | "relu"
+    reward_scale: int = 1000
 
 
 @dataclass

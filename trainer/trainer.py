@@ -77,8 +77,8 @@ class Trainer:
         cur_newick = self.env.tree_state[tree_idx]
         gt_newick = self.env.tree_gt[tree_idx]
         is_ll = self.phylo_cfg.obj_func == common.ObjFunc.LIKELIHOOD.value
-        msa_path = os.path.join(self.env.data_dir,
-                                f"{tree_idx}{common.POSTFIX_MSA}")
+        is_ql = self.rl_cfg.loss_type == common.NetworkType.QLearning.value
+        msa_path = os.path.join(self.env.data_dir, str(tree_idx), common.POSTFIX_MSA)
         transitions = []
 
         # ── Likelihood: get initial logL ──
@@ -110,7 +110,9 @@ class Trainer:
                 _, new_logL = utils.evaluate_loglikelihood_raxmlng(
                     next_newick, msa_path,
                     model=self.phylo_cfg.bl_opt_model)
-                reward = new_logL - cur_logL
+                reward = common.reward_definition(
+                    cur_logL, new_logL,
+                    self.rl_cfg.reward_type, self.rl_cfg.reward_scale)
                 cur_logL = new_logL
             else:
                 reward = float(rf_rewards[action_idx])
@@ -120,6 +122,19 @@ class Trainer:
                 'action_idx': action_idx,
                 'reward': reward,
             })
+
+            # ── Q-learning: add to buffer + learn inline ──
+            if is_ql:
+                chosen_feat = X[action_idx].detach()
+                next_X = torch.tensor(next_feats, dtype=torch.float32,
+                                      device=self.train_cfg.device)
+                next_X = utils.normalize_features(next_X)
+                with torch.no_grad():
+                    next_q = self.agent.network_target(next_X).squeeze(-1)
+                    best_next_feat = next_X[torch.argmax(next_q)].detach()
+                self.buffer.add(chosen_feat, reward, best_next_feat)
+                if len(self.buffer) >= self.rl_cfg.batch_size:
+                    self._learn_qlearning()
 
             # BL optimization (RF mode only; likelihood already does it)
             if not is_ll and self.phylo_cfg.optimize_bl \
@@ -168,44 +183,15 @@ class Trainer:
         total_steps = 0
         for epoch in range(self.train_cfg.num_epoch):
             tree_cur = np.random.choice(self.env.tree_indices)
-            cur_newick = self.env.tree_state[tree_cur]
-            gt_newick = self.env.tree_gt[tree_cur]
-            epoch_reward = 0.0
+            self.env.tree_state[tree_cur] = self.env.tree_start[tree_cur]
 
-            cur_newick, cur_actions, cur_feats, cur_rewards = \
-                self.env.cpp.get_state_action(cur_newick, -1, gt_newick)
+            transitions = self._rollout(tree_cur)
+            epoch_reward = sum(t['reward'] for t in transitions)
 
-            for step in range(self.rl_cfg.n_steps):
-                X = torch.tensor(cur_feats, dtype=torch.float32,
-                                 device=self.train_cfg.device)
-                action, action_idx = self.agent.choose(cur_actions, X)
-                chosen_feat = X[action_idx].detach()
-                reward = float(cur_rewards[action_idx])
-                epoch_reward += reward
+            total_steps += self.rl_cfg.n_steps
+            if total_steps % self.rl_cfg.target_update_freq == 0:
+                self.agent.update_target()
 
-                next_newick, next_actions, next_feats, next_rewards = \
-                    self.env.cpp.get_state_action(
-                        cur_newick, action_idx, gt_newick)
-                next_X = torch.tensor(next_feats, dtype=torch.float32,
-                                      device=self.train_cfg.device)
-                with torch.no_grad():
-                    next_q = self.agent.network_target(next_X).squeeze(-1)
-                    best_next_feat = next_X[torch.argmax(next_q)].detach()
-
-                self.buffer.add(chosen_feat, reward, best_next_feat)
-                if len(self.buffer) >= self.rl_cfg.batch_size:
-                    self._learn_qlearning()
-
-                total_steps += 1
-                if total_steps % self.rl_cfg.target_update_freq == 0:
-                    self.agent.update_target()
-
-                cur_newick = next_newick
-                cur_actions = next_actions
-                cur_feats = next_feats
-                cur_rewards = next_rewards
-
-            self.env.tree_state[tree_cur] = cur_newick
             self.scheduler.step()
             if epoch_reward > self.best_reward:
                 self.best_reward = epoch_reward
@@ -214,7 +200,7 @@ class Trainer:
             common.logger.info(
                 f"Epoch {epoch}/{self.train_cfg.num_epoch} "
                 f"tree={tree_cur} reward={epoch_reward:.4f} "
-                f"eps={self.agent.epsilon:.3f} buffer={len(self.buffer)}")
+                f"eps={self.agent._current_epsilon():.3f} buffer={len(self.buffer)}")
 
     def _learn_qlearning(self):
         sa, r, nsa = self.buffer.sample()

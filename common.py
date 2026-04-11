@@ -32,9 +32,9 @@ INITIAL_ACTION = -1
 DEFAULT_SPR_RADIUS = 10
 
 NAME_TREEFILE = "newick"
-POSTFIX_GT = f"_gt.{NAME_TREEFILE}"
-POSTFIX_START = f"_start.{NAME_TREEFILE}"
-POSTFIX_MSA = ".phy"
+POSTFIX_GT = f"gt.{NAME_TREEFILE}"
+POSTFIX_START = f"start.{NAME_TREEFILE}"
+POSTFIX_MSA = "data.phy"
 
 FEAT_NAMES = [
     "total_bl",          # 0  — tree total BL (normalization anchor)
@@ -81,3 +81,19 @@ def setup_log_file(loss_type, obj_func, num_epoch, num_epoch_episode, n_steps):
         datefmt="%Y-%m-%d %H:%M:%S",
     ))
     logger.addHandler(fh)
+
+class RewardDefinition(Enum):
+    RAW_DELTA = 'raw'
+    NORMALIZED = 'normalized'
+    RELU = 'relu'
+
+def reward_definition(old_score, current_score, type: str, scale_norm: int):
+    if type == RewardDefinition.RAW_DELTA.value:
+        return old_score - current_score
+    elif type == RewardDefinition.NORMALIZED.value:
+        return ((current_score - old_score)/(-old_score))*scale_norm
+    elif type == RewardDefinition.RELU.value:
+        return max(current_score- old_score, 0)
+    else:
+        raise ValueError('Not implemented this reward definition')
+

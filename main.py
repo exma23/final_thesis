@@ -31,6 +31,9 @@ def parse_args():
                         choices=["reinforce", "q_learning"])
     parser.add_argument("--n-steps", dest="n_steps", type=int)
     parser.add_argument("--gamma", type=float)
+    parser.add_argument("--reward-type", dest="reward_type",
+                        choices=["raw", "normalized", "relu"])
+    parser.add_argument("--reward-scale", dest="reward_scale", type=int)
 
     # ── Agent ──
     parser.add_argument("--strategy-train", dest="strategy_train",
@@ -98,6 +101,10 @@ def run(args):
         phylo_cfg.bl_opt_model = args.bl_opt_model
     if args.optimize_bl is False:
         phylo_cfg.optimize_bl = False
+    if args.reward_type is not None:
+        rl_cfg.reward_type = args.reward_type
+    if args.reward_scale is not None:
+        rl_cfg.reward_scale = args.reward_scale
 
     data_dir = args.data_dir or paths.get("data_dir", common.DATA_PATH)
     ckp_dir = args.checkpoint_dir or paths.get("checkpoint_dir", common.CHECKPOINT_PATH)
@@ -110,6 +117,7 @@ def run(args):
 
     model_tag = (
         f"{rl_cfg.loss_type}_{phylo_cfg.obj_func}"
+        f"_{rl_cfg.reward_type}r"
         f"_ep{train_cfg.num_epoch}"
         f"_epe{train_cfg.num_epoch_episode}"
         f"_steps{rl_cfg.n_steps}"
@@ -138,6 +146,8 @@ def run(args):
     log.info(f"  device:       {train_cfg.device}")
     log.info(f"  strategy:     {agent_cfg['strategy_train']}")
     log.info(f"  data_dir:     {data_dir}")
+    log.info(f"  reward_type:  {rl_cfg.reward_type}")
+    log.info(f"  reward_scale: {rl_cfg.reward_scale}")
     log.info("==============")
 
     # 5. Build components

@@ -6,18 +6,19 @@ import torch
 import subprocess
 import tempfile
 
-def load_data(data_dir: str) -> Tuple[Dict[int, str], Dict[int, str]]:
-    tree_start = {}
-    tree_gt = {}
-
-    for path in sorted(glob.glob(os.path.join(data_dir, f'*{common.POSTFIX_START}'))):
-        tree_id = os.path.basename(path).replace(common.POSTFIX_START, '')
-        gt_path = os.path.join(data_dir, f'{tree_id}{common.POSTFIX_GT}')
-        with open(path) as f:
-            tree_start[tree_id] = f.read().strip()
-        with open(gt_path) as f:
-            tree_gt[tree_id] = f.read().strip()
-
+def load_data(data_dir):
+    tree_start, tree_gt = {}, {}
+    for folder in sorted(os.listdir(data_dir)):
+        folder_path = os.path.join(data_dir, folder)
+        if not os.path.isdir(folder_path):
+            continue
+        start_path = os.path.join(folder_path, common.POSTFIX_START)
+        gt_path = os.path.join(folder_path, common.POSTFIX_GT)
+        if os.path.exists(start_path) and os.path.exists(gt_path):
+            with open(start_path) as f:
+                tree_start[folder] = f.read().strip()
+            with open(gt_path) as f:
+                tree_gt[folder] = f.read().strip()
     return tree_start, tree_gt
 
 
@@ -28,14 +29,14 @@ def load_data_indices(data_dir: str, indices: List[int]) -> Tuple[Dict[int, str]
     return tree_start, tree_gt
 
 
-def get_tree_indices(data_dir: str) -> List[int]:
+def get_tree_indices(data_dir):
     indices = []
-    for path in sorted(glob.glob(os.path.join(data_dir, f'*{common.POSTFIX_START}'))):
-        tree_id = os.path.basename(path).replace(common.POSTFIX_START, '')
-        try:
-            indices.append(int(tree_id))
-        except ValueError:
-            pass
+    for folder in sorted(os.listdir(data_dir)):
+        if os.path.isdir(os.path.join(data_dir, folder)):
+            try:
+                indices.append(int(folder))
+            except ValueError:
+                pass
     return sorted(indices)
 
 def normalize_features(X: torch.Tensor, n_taxa: int = 30) -> torch.Tensor:
@@ -144,6 +145,8 @@ def load_config(path: str = "config.yaml"):
         epsilon_start=r.get("epsilon_start", 1.0),
         epsilon_end=r.get("epsilon_end", 0.05),
         epsilon_decay_steps=r.get("epsilon_decay_steps", 5000),
+        reward_type=r.get("reward_type", "raw"),
+        reward_scale=r.get("reward_scale", 1000),
     )
 
     p = raw["phylo"]
